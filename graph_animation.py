@@ -1,6 +1,5 @@
 import customtkinter as ctk
 import tkinter as tk
-import time
 
 class GraphVisualizer(ctk.CTkFrame):
     def __init__(self, master, algorithm="bfs"):
