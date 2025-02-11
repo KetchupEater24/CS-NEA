@@ -13,6 +13,7 @@ class Database:
         self.create_tables()
 
     def create_tables(self):
+        # Create base tables first
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +32,7 @@ class Database:
         )
         """)
 
-        
+        # Create cards table with all columns initially
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS cards (
             card_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,7 +89,7 @@ class Database:
 
         self.conn.commit()
 
-############################AUTHENTICATION##################################
+    ################## AUTHENTICATION ##################
     
     def verify_login(self, username, password):
         try:
@@ -137,7 +138,11 @@ class Database:
             """, (username, email, password_hash))
             self.conn.commit()
             
+            # Get the user_id of the newly created user
             user_id = self.cursor.lastrowid
+            
+            # Removed default deck seeding (premade CS and Physics decks) and spaced repetition features.
+            # self.seed_initial_decks(user_id)
             
             return user_id
         except Exception as e:
@@ -153,7 +158,7 @@ class Database:
         result = self.cursor.fetchone()
         return result[0] if result else None
 
-##################################DECK OPERATIONS################################
+    ################## DECK OPERATIONS ##################
     
     def get_decks(self, user_id):
         self.cursor.execute("""
@@ -211,7 +216,7 @@ class Database:
         self.cursor.execute("SELECT COUNT(*) FROM decks WHERE user_id = ?", (user_id,))
         return self.cursor.fetchone()[0]
 
-########################################CARD OPERATION#######################################
+    ################## CARD OPERATIONS ##################
     
     def get_cards(self, deck_id):
         self.cursor.execute("""
@@ -270,7 +275,7 @@ class Database:
         """, (user_id,))
         return self.cursor.fetchone()[0]
 
-#########################QUIZ & ANALYTICS########################################
+    ################## QUIZ & ANALYTICS ##################
     
     def save_quiz_result(self, user_id, deck_id, card_id, is_correct, time_taken):
         query = """
@@ -503,6 +508,10 @@ class Database:
         LIMIT 30
         """, (user_id,))
         return self.cursor.fetchall()
+
+    # Spaced repetition related functions removed:
+    # - get_retention_intervals
+    # - get_difficulty_distribution
 
 if __name__ == "__main__":
     db = Database()

@@ -108,7 +108,6 @@ class SignupPage(ctk.CTkFrame):
             text_color="#6B7280"
         ).pack(side="left")
         
-        #login link
         login_link = ctk.CTkLabel(
             login_frame,
             text="Log in",

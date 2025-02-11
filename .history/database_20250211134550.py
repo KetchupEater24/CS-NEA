@@ -270,7 +270,7 @@ class Database:
         """, (user_id,))
         return self.cursor.fetchone()[0]
 
-#########################QUIZ & ANALYTICS########################################
+#########################QUIZ & ANALAYTICS
     
     def save_quiz_result(self, user_id, deck_id, card_id, is_correct, time_taken):
         query = """
@@ -503,6 +503,10 @@ class Database:
         LIMIT 30
         """, (user_id,))
         return self.cursor.fetchall()
+
+    # Spaced repetition related functions removed:
+    # - get_retention_intervals
+    # - get_difficulty_distribution
 
 if __name__ == "__main__":
     db = Database()

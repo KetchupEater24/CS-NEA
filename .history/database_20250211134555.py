@@ -504,6 +504,10 @@ class Database:
         """, (user_id,))
         return self.cursor.fetchall()
 
+    # Spaced repetition related functions removed:
+    # - get_retention_intervals
+    # - get_difficulty_distribution
+
 if __name__ == "__main__":
     db = Database()
     print("Database and tables created successfully.")

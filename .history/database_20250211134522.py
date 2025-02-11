@@ -153,7 +153,7 @@ class Database:
         result = self.cursor.fetchone()
         return result[0] if result else None
 
-##################################DECK OPERATIONS################################
+##################################DECK OPERATIONS###########################3
     
     def get_decks(self, user_id):
         self.cursor.execute("""
@@ -211,7 +211,7 @@ class Database:
         self.cursor.execute("SELECT COUNT(*) FROM decks WHERE user_id = ?", (user_id,))
         return self.cursor.fetchone()[0]
 
-########################################CARD OPERATION#######################################
+    ################## CARD OPERATIONS ##################
     
     def get_cards(self, deck_id):
         self.cursor.execute("""
@@ -270,7 +270,7 @@ class Database:
         """, (user_id,))
         return self.cursor.fetchone()[0]
 
-#########################QUIZ & ANALYTICS########################################
+    ################## QUIZ & ANALYTICS ##################
     
     def save_quiz_result(self, user_id, deck_id, card_id, is_correct, time_taken):
         query = """
@@ -503,6 +503,10 @@ class Database:
         LIMIT 30
         """, (user_id,))
         return self.cursor.fetchall()
+
+    # Spaced repetition related functions removed:
+    # - get_retention_intervals
+    # - get_difficulty_distribution
 
 if __name__ == "__main__":
     db = Database()

@@ -98,7 +98,7 @@ class SignupPage(ctk.CTkFrame):
             command=self.signup_action
         ).pack(pady=20)
 
-        # login text
+        # login text and link
         login_frame = ctk.CTkFrame(self.signup_container, fg_color="transparent")
         login_frame.pack(pady=5)
         
@@ -108,7 +108,6 @@ class SignupPage(ctk.CTkFrame):
             text_color="#6B7280"
         ).pack(side="left")
         
-        #login link
         login_link = ctk.CTkLabel(
             login_frame,
             text="Log in",

@@ -22,6 +22,7 @@ class Application(ctk.CTk):
         self.switch_page(LoginPage)
 
     def switch_page(self, page_class, **kwargs):
+        # Destroy all existing widgets first
         for widget in self.winfo_children():
             widget.destroy()
         self.current_page = page_class(self, **kwargs)

@@ -32,7 +32,7 @@ class HelperFunctions:
         return f"{salt}${hash_val:04x}" == stored_hash #returns true if calculated hash equals stored hash
 
 
-
+# keeps track of who's using the system
 class Session:
     # starts with no one logged in
     def __init__(self):

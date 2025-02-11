@@ -13,7 +13,7 @@ class SignupPage(ctk.CTkFrame):
         super().__init__(master, fg_color="#FFFFFF")
         self.session = Session()
 
-        # signup container
+        # Center container
         self.signup_container = ctk.CTkFrame(
             self, 
             fg_color="white",
@@ -24,7 +24,7 @@ class SignupPage(ctk.CTkFrame):
         self.signup_container.place(relx=0.5, rely=0.45, anchor="center")
         self.signup_container.grid_propagate(False)
 
-        # logo
+        # Logo
         self.logo_image = ctk.CTkImage(
             light_image=Image.open("images/logo.png"),
             size=(80, 80)
@@ -35,7 +35,7 @@ class SignupPage(ctk.CTkFrame):
             text=""
         ).pack(pady=(50, 10))
         
-        # flow space text
+        # Flow Space text
         ctk.CTkLabel(
             self.signup_container,
             text="Flow Space",
@@ -43,7 +43,7 @@ class SignupPage(ctk.CTkFrame):
             text_color=("#000000"),
         ).pack(pady=(0, 30))
 
-        # email entry
+        # Email entry
         self.email_entry = ctk.CTkEntry(
             self.signup_container,
             placeholder_text="Email",
@@ -57,7 +57,7 @@ class SignupPage(ctk.CTkFrame):
         )
         self.email_entry.pack(pady=10)
 
-        # username entry
+        # Username entry
         self.username_entry = ctk.CTkEntry(
             self.signup_container,
             placeholder_text="Username",
@@ -71,7 +71,7 @@ class SignupPage(ctk.CTkFrame):
         )
         self.username_entry.pack(pady=10)
 
-        # password entry
+        # Password entry
         self.password_entry = ctk.CTkEntry(
             self.signup_container,
             placeholder_text="Password",
@@ -86,7 +86,7 @@ class SignupPage(ctk.CTkFrame):
         )
         self.password_entry.pack(pady=10)
 
-        # sign Up button
+        # Sign Up button
         ctk.CTkButton(
             self.signup_container,
             text="Sign Up",
@@ -98,7 +98,7 @@ class SignupPage(ctk.CTkFrame):
             command=self.signup_action
         ).pack(pady=20)
 
-        # login text
+        # Login text and link
         login_frame = ctk.CTkFrame(self.signup_container, fg_color="transparent")
         login_frame.pack(pady=5)
         
@@ -108,7 +108,6 @@ class SignupPage(ctk.CTkFrame):
             text_color="#6B7280"
         ).pack(side="left")
         
-        #login link
         login_link = ctk.CTkLabel(
             login_frame,
             text="Log in",

@@ -8,10 +8,10 @@ from tkinter import messagebox
 
 class LoginPage(ctk.CTkFrame):
     def __init__(self, master):
-        super().__init__(master, fg_color="#FFFFFF")  
+        super().__init__(master, fg_color="#FFFFFF")  # White background
         self.session = Session()
 
-        #login container
+        # Center container
         self.login_container = ctk.CTkFrame(
             self, 
             fg_color="white",
@@ -22,7 +22,7 @@ class LoginPage(ctk.CTkFrame):
         self.login_container.place(relx=0.5, rely=0.45, anchor="center")
         self.login_container.grid_propagate(False)
 
-        # logo
+        # Logo
         self.logo_image = ctk.CTkImage(
             light_image=Image.open("images/logo.png"),
             size=(80, 80)
@@ -33,7 +33,7 @@ class LoginPage(ctk.CTkFrame):
             text=""
         ).pack(pady=(50, 10))
         
-        #flkw space text
+        # Flow Space text
         ctk.CTkLabel(
             self.login_container,
             text="Flow Space",
@@ -41,7 +41,7 @@ class LoginPage(ctk.CTkFrame):
             text_color=("#000000"),
         ).pack(pady=(0, 30))
 
-        # username entry
+        # Username entry
         self.username_entry = ctk.CTkEntry(
             self.login_container,
             placeholder_text="Username",
@@ -55,7 +55,7 @@ class LoginPage(ctk.CTkFrame):
         )
         self.username_entry.pack(pady=10)
 
-        # password entry
+        # Password entry
         self.password_entry = ctk.CTkEntry(
             self.login_container,
             placeholder_text="Password",
@@ -70,7 +70,7 @@ class LoginPage(ctk.CTkFrame):
         )
         self.password_entry.pack(pady=10)
 
-        # login button
+        # Login button
         ctk.CTkButton(
             self.login_container,
             text="Login",
@@ -82,7 +82,7 @@ class LoginPage(ctk.CTkFrame):
             command=self.login_action
         ).pack(pady=20)
 
-        # error label
+        # Error label
         self.error_label = ctk.CTkLabel(
             self.login_container,
             text="",
@@ -90,7 +90,7 @@ class LoginPage(ctk.CTkFrame):
         )
         self.error_label.pack()
 
-        # sign up link
+        # Sign up link
         signup_frame = ctk.CTkFrame(self.login_container, fg_color="transparent")
         signup_frame.pack(pady=10)
         

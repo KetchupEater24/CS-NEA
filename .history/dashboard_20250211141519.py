@@ -676,12 +676,12 @@ class CardsPage(ctk.CTkFrame):
         self.session = session
         self.switch_page = switch_page
 
-        # get username from database User-Defined OOP - example of association
+        # get username from database 
         db = Database()
         self.username = db.get_username(self.user_id)
         self.deck_info = db.get_deck_info(self.deck_id)
 
-        # greate sidebar - example of instantiation
+        # greate sidebar
         self.sidebar = Sidebar(self, switch_page, self.username, self.user_id, self.session)
         self.sidebar.pack(side="left", fill="y")
 
