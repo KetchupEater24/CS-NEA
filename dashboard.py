@@ -9,7 +9,7 @@ from datetime import datetime
 from database import Database
 from helpers import Session
 from components import CustomInputDialog
-
+from graph import build_deck_graph, bfs_deck_graph
 session = Session()
 
 #####################################################SIDEBAR########################################################################
@@ -387,23 +387,60 @@ class DecksPage(ctk.CTkFrame):
         
         self.display_decks()
 
+    # def display_decks(self):
+    #     for widget in self.decks_frame.winfo_children():
+    #         widget.destroy()
+            
+    #     db = Database()
+    #     decks = db.get_decks(self.user_id)
+        
+    #     row = 0
+    #     col = 0
+    #     for deck_id, deck_name in decks:
+    #         card_count = db.get_card_count(deck_id)
+    #         deck_container = DeckContainer(
+    #             self.decks_frame,
+    #             deck_id,
+    #             deck_name,
+    #             card_count,
+    #             self.toggle_deck_selection
+    #         )
+    #         deck_container.grid(row=row, column=col, padx=10, pady=10, sticky="ew")
+            
+    #         col += 1
+    #         if col > 1:
+    #             col = 0
+    #             row += 1
+
     def display_decks(self):
         for widget in self.decks_frame.winfo_children():
             widget.destroy()
             
         db = Database()
-        decks = db.get_decks(self.user_id)
+        # get decks with difference stats (correct - wrong)
+        deck_stats = db.get_decks_difference_stats(self.user_id)
+        # sort the list in ascending order (lower difference means user is doing worse, so higher priority)
+        deck_stats = sorted(deck_stats, key=lambda x: x[2])
+        
+        # build the deck graph and traverse it in BFS order
+        root = build_deck_graph(deck_stats)
+        ordered_nodes = bfs_deck_graph(root)
         
         row = 0
         col = 0
-        for deck_id, deck_name in decks:
+        for node in ordered_nodes:
+            deck_id = node.deck_id
+            deck_name = node.deck_name
+            difference = node.difference
             card_count = db.get_card_count(deck_id)
+            # pass the difference value to DeckContainer
             deck_container = DeckContainer(
                 self.decks_frame,
                 deck_id,
                 deck_name,
                 card_count,
-                self.toggle_deck_selection
+                self.toggle_deck_selection,
+                difference
             )
             deck_container.grid(row=row, column=col, padx=10, pady=10, sticky="ew")
             
@@ -474,13 +511,71 @@ class DecksPage(ctk.CTkFrame):
                 self.sidebar.load_decks()
             self.delete_button.configure(state="disabled")
 
+# class DeckContainer(ctk.CTkFrame):
+#     def __init__(self, master, deck_id, deck_name, card_count, selection_callback):
+#         super().__init__(master, fg_color="white", corner_radius=8)
+#         self.configure(border_width=1, border_color="#E5E7EB")
+#         self.deck_id = deck_id
+#         self.selection_callback = selection_callback
+#         self.selected = False
+#         self.priority = priority
+        
+#         # make the entire container clickable
+#         self.bind("<Button-1>", self.toggle_selection)
+        
+#         # content frame
+#         content_frame = ctk.CTkFrame(self, fg_color="transparent")
+#         content_frame.pack(fill="both", expand=True, padx=20, pady=20)
+#         content_frame.bind("<Button-1>", self.toggle_selection)
+        
+#         # title and count
+#         title_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
+#         title_frame.pack(side="left", fill="both", expand=True)
+        
+#         ctk.CTkLabel(
+#             title_frame,
+#             text=deck_name,
+#             font=("Inter", 16, "bold"),
+#             text_color="black"
+#         ).pack(anchor="w")
+        
+#         ctk.CTkLabel(
+#             title_frame,
+#             text=f"{card_count} cards",
+#             font=("Inter", 14),
+#             text_color="#6B7280"
+#         ).pack(anchor="w", pady=(5, 0))
+        
+#         # csheckbox
+#         self.checkbox = ctk.CTkCheckBox(
+#             content_frame,
+#             text="",
+#             width=24,
+#             height=24,
+#             corner_radius=6,
+#             fg_color="#4F46E5",
+#             hover_color="#4338CA",
+#             command=self.on_checkbox_click
+#         )
+#         self.checkbox.pack(side="right")
+
+#     def toggle_selection(self, event=None):
+#         self.selected = not self.selected
+#         self.checkbox.select() if self.selected else self.checkbox.deselect()
+#         self.selection_callback(self.deck_id, self.selected)
+#         self.configure(fg_color="#F5F3FF" if self.selected else "white")
+
+#     def on_checkbox_click(self):
+#         self.toggle_selection()
+
 class DeckContainer(ctk.CTkFrame):
-    def __init__(self, master, deck_id, deck_name, card_count, selection_callback):
+    def __init__(self, master, deck_id, deck_name, card_count, selection_callback, difference):
         super().__init__(master, fg_color="white", corner_radius=8)
         self.configure(border_width=1, border_color="#E5E7EB")
         self.deck_id = deck_id
         self.selection_callback = selection_callback
         self.selected = False
+        self.difference = difference  # the difference (correct - wrong)
         
         # make the entire container clickable
         self.bind("<Button-1>", self.toggle_selection)
@@ -490,10 +585,12 @@ class DeckContainer(ctk.CTkFrame):
         content_frame.pack(fill="both", expand=True, padx=20, pady=20)
         content_frame.bind("<Button-1>", self.toggle_selection)
         
-        # title and count
+        # title and count container
         title_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
         title_frame.pack(side="left", fill="both", expand=True)
+        title_frame.bind("<Button-1>", self.toggle_selection)
         
+        # deck name label
         ctk.CTkLabel(
             title_frame,
             text=deck_name,
@@ -501,6 +598,7 @@ class DeckContainer(ctk.CTkFrame):
             text_color="black"
         ).pack(anchor="w")
         
+        # card count label
         ctk.CTkLabel(
             title_frame,
             text=f"{card_count} cards",
@@ -508,7 +606,31 @@ class DeckContainer(ctk.CTkFrame):
             text_color="#6B7280"
         ).pack(anchor="w", pady=(5, 0))
         
-        # csheckbox
+        # indicator frame to display difference and priority
+        indicator_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
+        indicator_frame.pack(side="right", padx=10)
+        
+        # difference count label
+        diff_label = ctk.CTkLabel(
+            indicator_frame,
+            text=f"Diff: {self.difference}",
+            font=("Inter", 12),
+            text_color="blue"
+        )
+        diff_label.pack(side="left", padx=(0, 5))
+        
+        # get priority indicator based on the difference count
+        from helpers import HelperFunctions     
+        priority_text, color = HelperFunctions.get_priority_indicator(self.difference)
+        priority_label = ctk.CTkLabel(
+            indicator_frame,
+            text=priority_text,
+            font=("Inter", 12, "bold"),
+            text_color=color
+        )
+        priority_label.pack(side="left")
+        
+        # checkbox for selection
         self.checkbox = ctk.CTkCheckBox(
             content_frame,
             text="",
@@ -519,7 +641,7 @@ class DeckContainer(ctk.CTkFrame):
             hover_color="#4338CA",
             command=self.on_checkbox_click
         )
-        self.checkbox.pack(side="right")
+        self.checkbox.pack(side="right", padx=(0, 10))
 
     def toggle_selection(self, event=None):
         self.selected = not self.selected
@@ -1519,17 +1641,26 @@ class QuizSession(ctk.CTkFrame):
         # get the current card (assumed tuple format: (card_id, question, answer, difficulty))
         current_card = self.cards[self.current_index]
         card_id = current_card[0]
-        # update the card's difficulty in the database using the new method
+        # create a new Database instance
         db = Database()
+        # update the card's difficulty in the database using the new method
         db.update_card_difficulty(card_id, difficulty_weight)
-        # optionally, record additional quiz result info if desired
+        # determine if the response is correct:
+        # treat ratings 1 and 2 as correct, 3 and 4 as incorrect
+        is_correct = True if difficulty_weight <= 2 else False
+        # save the quiz result (this inserts a record into quiz_results)
+        db.save_quiz_result(self.user_id, self.deck_id, card_id, is_correct, time_taken)
+        # update stats: increment correct_count if answer is correct and add time_taken
+        if is_correct:
+            self.correct_count += 1
         self.total_time += time_taken
-        # move to the next card
+        # move to the next card; if no more cards, end the quiz
         self.current_index += 1
         if self.current_index < len(self.cards):
             self.display_card()
         else:
             self.end_quiz()
+
 
             
     def end_quiz(self):

@@ -517,6 +517,85 @@ class Database:
         """, (user_id,))
         return self.cursor.fetchall()
 
+
+    # # new method to get deck priority statistics for a user
+    # def get_deck_priority_stats(self, user_id):
+    #     # this query returns each deck with the number of wrong answers and average time for wrong answers
+    #     query = """
+    #     SELECT d.deck_id, d.deck_name,
+    #            COUNT(q.result_id) as wrong_count,
+    #            AVG(q.time_taken) as avg_time
+    #     FROM decks d
+    #     LEFT JOIN quiz_results q 
+    #         ON d.deck_id = q.deck_id 
+    #         AND q.user_id = ? 
+    #         AND q.is_correct = 0
+    #     WHERE d.user_id = ?
+    #     GROUP BY d.deck_id, d.deck_name
+    #     """
+    #     self.cursor.execute(query, (user_id, user_id))
+    #     results = self.cursor.fetchall()
+    #     stats = []
+    #     for row in results:
+    #         deck_id, deck_name, wrong_count, avg_time = row
+    #         wrong_count = wrong_count if wrong_count is not None else 0
+    #         avg_time = avg_time if avg_time is not None else 0
+    #         # simple thresholds (you can adjust these as needed)
+    #         if wrong_count > 5 or avg_time > 10:
+    #             priority = "HIGH"
+    #             priority_val = 3
+    #         elif wrong_count > 2 or avg_time > 5:
+    #             priority = "MEDIUM"
+    #             priority_val = 2
+    #         else:
+    #             priority = "LOW"
+    #             priority_val = 1
+    #         stats.append((deck_id, deck_name, priority, priority_val))
+    #     return stats
+
+
+    # new method to get the wrong answer count for each deck for a given user
+    # def get_decks_wrong_counts(self, user_id):
+    #     query = """
+    #     SELECT d.deck_id, d.deck_name,
+    #            COUNT(q.result_id) as wrong_count
+    #     FROM decks d
+    #     LEFT JOIN quiz_results q 
+    #          ON d.deck_id = q.deck_id AND q.user_id = ? AND q.is_correct = 0
+    #     WHERE d.user_id = ?
+    #     GROUP BY d.deck_id, d.deck_name
+    #     """
+    #     self.cursor.execute(query, (user_id, user_id))
+    #     results = self.cursor.fetchall()
+    #     # ensure wrong_count is an integer (defaulting to 0 if None)
+    #     results = [(deck_id, deck_name, wrong_count if wrong_count is not None else 0) for deck_id, deck_name, wrong_count in results]
+    #     return results
+
+    # new method to get the difference stats (correct_count - wrong_count) for each deck for a given user
+    def get_decks_difference_stats(self, user_id):
+        query = """
+        SELECT d.deck_id, d.deck_name,
+               SUM(CASE WHEN q.is_correct = 1 THEN 1 ELSE 0 END) as correct_count,
+               SUM(CASE WHEN q.is_correct = 0 THEN 1 ELSE 0 END) as wrong_count
+        FROM decks d
+        LEFT JOIN quiz_results q 
+            ON d.deck_id = q.deck_id AND q.user_id = ?
+        WHERE d.user_id = ?
+        GROUP BY d.deck_id, d.deck_name
+        """
+        self.cursor.execute(query, (user_id, user_id))
+        results = self.cursor.fetchall()
+        # compute the difference for each deck; if no records, default to 0 difference
+        stats = []
+        for row in results:
+            deck_id, deck_name, correct_count, wrong_count = row
+            correct_count = correct_count if correct_count is not None else 0
+            wrong_count = wrong_count if wrong_count is not None else 0
+            difference = correct_count - wrong_count
+            stats.append((deck_id, deck_name, difference))
+        return stats
+
+
 if __name__ == "__main__":
     db = Database()
     print("Database and tables created successfully.")

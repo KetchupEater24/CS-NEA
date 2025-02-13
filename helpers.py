@@ -1,5 +1,6 @@
 import random
 import string
+import math
 
 class HelperFunctions:
     @staticmethod
@@ -62,7 +63,44 @@ class HelperFunctions:
         sorted_cards.extend(right[j:])
         return sorted_cards
 
+    # @staticmethod
+    # def get_priority_indicator(wrong_count):
+    #     # convert the wrong count to a qualitative priority indicator
+    #     if wrong_count >= 10:
+    #         return "HIGH PRIORITY", "red"
+    #     elif wrong_count >= 5:
+    #         return "MEDIUM PRIORITY", "orange"
+    #     else:
+    #         return "LOW PRIORITY", "green"
 
+    @staticmethod
+    def get_priority_indicator(diff):
+        # if difference is negative (or very low), user is doing poorly → high priority
+        if diff < 0:
+            return "HIGH PRIORITY", "red"
+        # if difference is small (e.g., less than 5), it's medium priority
+        elif diff < 5:
+            return "MEDIUM PRIORITY", "orange"
+        else:
+            return "LOW PRIORITY", "green"
+
+    # @staticmethod
+    # def assign_radial_positions_star(root, canvas_width=800, canvas_height=600):
+    #     if root is None:
+    #         return
+    #     # Place the root at the center
+    #     root.x = canvas_width / 2
+    #     root.y = canvas_height / 2
+    #     num_children = len(root.children)
+    #     if num_children == 0:
+    #         return
+    #     # radius of the circle on which children will be placed
+    #     r = min(canvas_width, canvas_height) / 3
+    #     angle_step = 2 * math.pi / num_children
+    #     for i, child in enumerate(root.children):
+    #         angle = i * angle_step
+    #         child.x = root.x + r * math.cos(angle)
+    #         child.y = root.y + r * math.sin(angle)
 
 
 class Session:
