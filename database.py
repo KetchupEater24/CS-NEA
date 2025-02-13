@@ -38,6 +38,7 @@ class Database:
             deck_id INTEGER,
             question TEXT NOT NULL,
             answer TEXT NOT NULL,
+            difficulty INTEGER DEFAULT 2,  
             FOREIGN KEY (deck_id) REFERENCES decks(deck_id)
         )
         """)
@@ -469,18 +470,30 @@ class Database:
         self.conn.commit()
 
     def get_cards_for_review(self, deck_id):
+        # select card_id, question, answer, and difficulty from cards
         query = """
         SELECT 
             card_id,
             question,
-            answer
+            answer,
+            difficulty
         FROM cards 
         WHERE deck_id = ?
-        ORDER BY RANDOM()
-        LIMIT 20
+        ORDER BY 
+            difficulty DESC
+        LIMIT 100
         """
         self.cursor.execute(query, (deck_id,))
         return self.cursor.fetchall()
+
+    def update_card_difficulty(self, card_id, difficulty):
+        # update the difficulty value for the given card id
+        self.cursor.execute(
+            "UPDATE cards SET difficulty = ? WHERE card_id = ?",
+            (difficulty, card_id)
+        )
+        self.conn.commit()
+
 
     def save_session_stats(self, user_id, deck_id, accuracy, avg_time, total_cards, correct_cards, total_time):
         query = """

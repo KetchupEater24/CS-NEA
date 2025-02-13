@@ -1325,13 +1325,30 @@ class QuizSession(ctk.CTkFrame):
         self.correct_count = 0
         self.total_time = 0
         
+        from helpers import HelperFunctions
         db = Database()
         self.cards = []
-        for d in deck_ids:
+        for d in self.deck_ids:
+            # assume get_cards_for_review returns tuples with difficulty as the fourth element
             self.cards.extend(db.get_cards_for_review(d))
-        import random
-        random.shuffle(self.cards)
-        
+
+        # print the unsorted difficulties for debugging
+        print("before sort:")
+        for card in self.cards:
+            print("card id:", card[0], "difficulty:", card[3])
+
+        # sort the cards from highest to lowest difficulty using the merge sort implementation
+        self.cards = HelperFunctions.merge_sort_cards(self.cards)
+
+        # print the sorted difficulties for debugging
+        print("after sort:")
+        for card in self.cards:
+            print("card id:", card[0], "difficulty:", card[3])
+
+        if not self.cards:
+            self.show_no_cards_message()
+            return
+
         deck_names = []
         for d in deck_ids:
             info = db.get_deck_info(d)
@@ -1419,13 +1436,16 @@ class QuizSession(ctk.CTkFrame):
         )
         self.show_answer_btn.pack(pady=20)
         
-        # rating frame 
+        # rating frame for four difficulty options
         self.rating_frame = ctk.CTkFrame(self.content, fg_color="transparent")
+        # define options: (button text, difficulty weight, button color)
         ratings = [
-            ("Incorrect", False, "#DC2626"),
-            ("Correct", True, "#10B981")
+            ("Very Hard", 4, "#DC2626"),
+            ("Hard", 3, "#FECACA"),
+            ("Easy", 2, "#10B981"),
+            ("Very Easy", 1, "#A3E635")
         ]
-        for text, value, color in ratings:
+        for text, weight, color in ratings:
             btn = ctk.CTkButton(
                 self.rating_frame,
                 text=text,
@@ -1433,7 +1453,7 @@ class QuizSession(ctk.CTkFrame):
                 height=32,
                 fg_color=color,
                 hover_color=color,
-                command=lambda v=value: self.rate_card(v)
+                command=lambda w=weight: self.rate_card_difficulty(w)
             )
             btn.pack(side="left", padx=10)
 
@@ -1462,34 +1482,55 @@ class QuizSession(ctk.CTkFrame):
         self.answer_frame.pack()
         self.rating_frame.pack(pady=20)
         
-    def rate_card(self, is_correct):
-        # calculate time taken for the card
+    # def rate_card(self, is_correct):
+    #     # calculate time taken for the card
+    #     time_taken = (datetime.now() - self.card_start_time).total_seconds()
+        
+    #     # get current card ID (assuming card tuple: (card_id, question, answer))
+    #     card_id = self.cards[self.current_index][0]
+        
+    #     # save quiz result
+    #     db = Database()
+    #     db.save_quiz_result(
+    #         self.user_id,
+    #         self.deck_id,
+    #         card_id,
+    #         is_correct,
+    #         time_taken
+    #     )
+        
+    #     # update stats
+    #     if is_correct:
+    #         self.correct_count += 1
+    #     self.total_time += time_taken
+        
+    #     # move to next card or finish quiz
+    #     self.current_index += 1
+    #     if self.current_index < len(self.cards):
+    #         self.display_card()
+    #     else:
+    #         self.end_quiz()
+
+
+    # method to handle the difficulty rating of the current card
+    def rate_card_difficulty(self, difficulty_weight):
+        # calculate time taken for the current card
         time_taken = (datetime.now() - self.card_start_time).total_seconds()
-        
-        # get current card ID (assuming card tuple: (card_id, question, answer))
-        card_id = self.cards[self.current_index][0]
-        
-        # save quiz result
+        # get the current card (assumed tuple format: (card_id, question, answer, difficulty))
+        current_card = self.cards[self.current_index]
+        card_id = current_card[0]
+        # update the card's difficulty in the database using the new method
         db = Database()
-        db.save_quiz_result(
-            self.user_id,
-            self.deck_id,
-            card_id,
-            is_correct,
-            time_taken
-        )
-        
-        # update stats
-        if is_correct:
-            self.correct_count += 1
+        db.update_card_difficulty(card_id, difficulty_weight)
+        # optionally, record additional quiz result info if desired
         self.total_time += time_taken
-        
-        # move to next card or finish quiz
+        # move to the next card
         self.current_index += 1
         if self.current_index < len(self.cards):
             self.display_card()
         else:
             self.end_quiz()
+
             
     def end_quiz(self):
         total_cards = len(self.cards)
