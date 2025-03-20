@@ -26,9 +26,11 @@ class GraphVisualizer(ctk.CTkFrame):
             (200, 300)
         ]
         
+        print(positions)
         # Add nodes
         for x, y in positions:
             self.nodes.append((x, y))
             
         # Add edges
         self.edges = [(0,1), (1,2), (0,3), (1,4), (3,5), (4,5)] 
+
