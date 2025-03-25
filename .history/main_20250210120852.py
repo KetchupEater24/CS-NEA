@@ -5,8 +5,8 @@ from PIL import ImageTk
 # My Imports
 from database import Database
 from login import LoginPage
-from dashboard import DecksPage
-from helpers import Session
+from app import DecksPage
+from misc import Session
 
 db = Database()
 session = Session()

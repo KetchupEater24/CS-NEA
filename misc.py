@@ -1,6 +1,7 @@
 import random
 
-class HelperFunctions:
+# MiscFunctions contains Miscellaneous functions
+class MiscFunctions:
     # the decorator @staticmethod allows the function below it to be used without creating an instance of the HelperFunctions class
     @staticmethod
     def hash_password(password):
@@ -15,7 +16,6 @@ class HelperFunctions:
         num = 0
         for x in password + salt:
             num += ord(x)
-            print(num)
         # keeps num between 0 and 999 by doing a modulo operation
         num = num % 1000
         # returns the hash in the format "salt$num", with the num in 4 digit hex
@@ -33,7 +33,9 @@ class HelperFunctions:
         num = num % 1000
         # if the hash (salt$num) that was just calculated matches the stored hash, return true as password has now been verified
         # otherwise return false
-        return f"{salt}${num:04x}" == stored_hash
+        if f"{salt}${num:04x}" == stored_hash:
+            return True
+        return False
 
     @staticmethod
     def split(cards):
@@ -42,10 +44,10 @@ class HelperFunctions:
             return cards
         # recursively splits the list, until each sublist has 1 card in it
         mid = len(cards) // 2
-        left = HelperFunctions.split(cards[:mid])
-        right = HelperFunctions.split(cards[mid:])
+        left = MiscFunctions.split(cards[:mid])
+        right = MiscFunctions.split(cards[mid:])
         # calls merge_sort to sort to recursively combine each left and right sublists into a single sorted list
-        return HelperFunctions.merge_sort(left, right)
+        return MiscFunctions.merge_sort(left, right)
 
     @staticmethod
     def merge_sort(left, right):
@@ -60,7 +62,7 @@ class HelperFunctions:
             else:
                 # pops the first card from the right list and appends it to result, if this has lower ef
                 result.append(right.pop(0))
-        # once one list is empty, this adds the remaining cards from the other list to the result
+        # once one list is empty, the below code adds the remaining cards from the other list to the result
         # extend adds each item from the list individually, unlike append which would add the whole list as one element
         if left:
             result.extend(left)

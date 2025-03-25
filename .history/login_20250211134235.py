@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from database import Database
-from helpers import Session
-from dashboard import DecksPage
+from misc import Session
+from app import DecksPage
 from PIL import Image
 
 from tkinter import messagebox

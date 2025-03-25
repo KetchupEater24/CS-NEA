@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime
 
 # My Imports
-from helpers import HelperFunctions, Session
+from misc import MiscFunctions, Session
 
 class Database:
     def __init__(self, db_name="database.db"):
@@ -98,7 +98,7 @@ class Database:
                 (username,)
             )
             result = self.cursor.fetchone()
-            if result and HelperFunctions.verify_password(password, result[1]):
+            if result and MiscFunctions.verify_password(password, result[1]):
                 return result[0]
             return None
         except Exception as e:
@@ -131,7 +131,7 @@ class Database:
 
     def create_user(self, username, email, password):
         try:
-            password_hash = HelperFunctions.hash_password(password)
+            password_hash = MiscFunctions.hash_password(password)
             self.cursor.execute("""
                 INSERT INTO users (username, email, password_hash)
                 VALUES (?, ?, ?)

@@ -5,8 +5,8 @@ from PIL import Image
 
 # My Imports
 from database import Database
-from helpers import Session
-from dashboard import DecksPage
+from misc import Session
+from app import DecksPage
 
 class SignupPage(ctk.CTkFrame):
     def __init__(self, master):

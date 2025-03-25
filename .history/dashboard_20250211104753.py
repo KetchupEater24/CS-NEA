@@ -7,7 +7,7 @@ from datetime import datetime
 
 # My Imports
 from database import Database
-from helpers import Session
+from misc import Session
 from components import CustomInputDialog
 
 session = Session()
@@ -343,12 +343,12 @@ class DecksPage(ctk.CTkFrame):
         ).pack(side="left")
         
         # Buttons frame
-        buttons_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
-        buttons_frame.pack(side="right")
+        buttons = ctk.CTkFrame(header_frame, fg_color="transparent")
+        buttons.pack(side="right")
         
         # Add button
         ctk.CTkButton(
-            buttons_frame,
+            buttons,
             text="+ Add",
             width=70,
             height=32,
@@ -361,7 +361,7 @@ class DecksPage(ctk.CTkFrame):
         
         # delete selected button
         self.delete_button = ctk.CTkButton(
-            buttons_frame,
+            buttons,
             text="Delete Selected",
             width=70,
             height=32,
@@ -826,12 +826,12 @@ class CardContainer(ctk.CTkFrame):
         ).pack(anchor="w", pady=(5,0))
         
         # buttons frame
-        buttons_frame = ctk.CTkFrame(text_frame, fg_color="transparent")
-        buttons_frame.pack(fill="x", pady=(10,0))
+        buttons = ctk.CTkFrame(text_frame, fg_color="transparent")
+        buttons.pack(fill="x", pady=(10,0))
         
         # edit button - matches Add Card style
         ctk.CTkButton(
-            buttons_frame,
+            buttons,
             text="Edit",
             width=70,
             height=32,
@@ -844,7 +844,7 @@ class CardContainer(ctk.CTkFrame):
         
         # delete button - matches deck delete style
         ctk.CTkButton(
-            buttons_frame,
+            buttons,
             text="Delete",
             width=70,
             height=32,
