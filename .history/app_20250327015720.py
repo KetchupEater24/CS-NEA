@@ -299,6 +299,7 @@ class DeckContainer(BaseContainer):
         # get available for review count from database
         db = Database()
         available_for_review = db.get_available_for_review(self.user_id, deck_id)
+        # if available_for_review is not returned, default to 0
         if available_for_review is None:
             available_for_review = 0
 
@@ -369,14 +370,19 @@ class DeckContainer(BaseContainer):
             hover_color="#ffffff"
         )
         self.checkbox.place(relx=1.0, rely=0.0, anchor="ne", x=-10, y=10)
-            
+    
+    
     def on_checkbox_toggle(self):
+        # if checkbox pressed, get its value (true if selected, otherwise false)
         self.selected = self.checkbox.get()
+        # call selection_callback with the deck id and current selection state (true or false)
         if self.selection_callback:
             self.selection_callback(self.deck_id, self.selected)
+        # if the checkbox is selected, change background and checkbox color
         if self.selected:
             self.configure(fg_color="#F5F3FF")
             self.checkbox.configure(fg_color="#636ae8", checkmark_color="white", hover_color="#636ae8")
+        # if deselected or not selected, reset background and checkbox colors to default
         else:
             self.configure(fg_color="white")
             self.checkbox.configure(fg_color="white", checkmark_color="black", hover_color="white")
@@ -473,12 +479,16 @@ class CardContainer(BaseContainer):
         self.checkbox.place(relx=1.0, rely=0.0, anchor="ne", x=-10, y=10)
     
     def on_checkbox_toggle(self):
+        # if checkbox pressed, get its value (true if selected, otherwise false)
         self.selected = self.checkbox.get()
+        # call selection_callback with the card id and current selection state (true or false)
         if self.selection_callback:
             self.selection_callback(self.card_id, self.selected)
+        # if the checkbox is selected, change background and checkbox color
         if self.selected:
             self.configure(fg_color="#F5F3FF")
             self.checkbox.configure(fg_color="#636ae8", checkmark_color="white", hover_color="#636ae8")
+        # if deselected or not selected, reset background and checkbox colors to default        
         else:
             self.configure(fg_color="white")
             self.checkbox.configure(fg_color="white", checkmark_color="black", hover_color="white")
@@ -771,11 +781,8 @@ class EditCardDialog(BaseDialog):
 
     # when save card button clicked, call save_card to update the database with new card info
     def save_card(self):
-        # for CTkTextbox, you must specify a range when retrieving text.
-        # in ("1.0", "end-1c"), the 1 means start at the first line and the 0 means start at the first character of this line
-        # then "end-1c" means retrieve all text from the first character to the last character, and also remove the trailing newline
-        new_question = self.question_entry.get("1.0", "end-1c").strip()
-        new_answer = self.answer_entry.get("1.0", "end-1c").strip()
+        new_question = self.question_entry.get().strip()
+        new_answer = self.answer_entry.get().strip()
         if not new_question or not new_answer:
             messagebox.showwarning("Warning", "Please fill in both question and answer")
             return
@@ -840,11 +847,8 @@ class AddCardDialog(BaseDialog):
 
     # when save card button clicked, call save_card to add the card to the database
     def save_card(self):
-        # for CTkTextbox, you must specify a range when retrieving text.
-        # in ("1.0", "end-1c"), the 1 means start at the first line and the 0 means start at the first character of this line
-        # then "end-1c" means retrieve all text from the first character to the last character, and also remove the trailing newline
-        question = self.question_entry.get("1.0", "end-1c").strip()
-        answer = self.answer_entry.get("1.0", "end-1c").strip()
+        question = self.question_entry.get().strip()
+        answer = self.answer_entry.get().strip()
         if not question or not answer:
             messagebox.showwarning("Warning", "Please fill in both question and answer")
             return
@@ -1097,7 +1101,7 @@ class QuizPage(BasePage):
             deck_container = DeckContainer(
                 self.decks_frame,
                 deck_id=node.deck_id,
-                user_id=self.user_id,
+                user_id = self.user_id,
                 deck_name=node.deck_name,
                 card_count=node.card_count,
                 selection_callback=self.toggle_deck_selection,
@@ -1111,39 +1115,50 @@ class QuizPage(BasePage):
                 col = 0
                 row += 1
 
-   # when a checkbox is toggled, it passes deck_id 
+
     def toggle_deck_selection(self, deck_id, selected):
+        # iterate through all deck container widgets in the decks_frame
         for widget in self.decks_frame.winfo_children():
+            # check if the widget's deck_id matches the deck_id of the toggled deck
             if widget.deck_id == deck_id:
+                # selected is a parameter (either true or false)
+                # sets the widget to either have selected true or false, based on the parameter
                 widget.selected = selected
+                # if the deck is now selected, update its appearance and select its checkbox
                 if selected:
                     widget.configure(fg_color="#F5F3FF")
                     widget.checkbox.select()
                 else:
+                    # if the deck is deselected, reset its appearance and deselect its checkbox
                     widget.configure(fg_color="white")
                     widget.checkbox.deselect()
             else:
+                # for all other deck containers, make them deselected
                 widget.selected = False
                 widget.configure(fg_color="white")
                 widget.checkbox.deselect()
+                
+        # iterate through deck containers and check if any are selected
         any_selected = False
         for widget in self.decks_frame.winfo_children():
             if widget.selected:
                 any_selected = True
                 break
+        # enable the start button if a deck is selected, otherwise disable it
         self.start_button.configure(state="normal" if any_selected else "disabled")
 
+
     def start_quiz(self):
-        # Find the selected deck by iterating over deck containers
+        # find the selected deck by iterating over deck containers
         selected_deck_id = None
         for widget in self.decks_frame.winfo_children():
-            if hasattr(widget, "selected") and widget.selected:
-                selected_deck_id = widget.deck_id
-                break
+            selected_deck_id = widget.deck_id
+            break
+        # if start quiz pressed, and no deck selected, display a message
         if selected_deck_id is None:
             messagebox.showwarning("Warning", "Please select a deck")
             return
-        # Clear the master and start the quiz session with the selected deck.
+        # clear all widgets on screen and start the quiz session with the selected deck.
         for widget in self.master.winfo_children():
             widget.destroy()
         QuizSession(self.master, self.user_id, selected_deck_id, self.switch_page)

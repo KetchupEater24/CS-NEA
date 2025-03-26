@@ -6,7 +6,7 @@ from database import Database
 class Sidebar(ctk.CTkFrame):
     # initialises the sidebar as a subclass of CTkFrame (inheritance)
     # CTkFrame is allows sidebar to be a widget on the screen
-    def __init__(self, master, switch_page, user_id):
+    def __init__(self, master, switch_page, username, user_id):
         super().__init__(master, fg_color="white", width=250, corner_radius=0, border_width=0, border_color="#E5E7EB")
 
         self.right_border = ctk.CTkFrame(self, width=1, fg_color="#E5E7EB", corner_radius=0)
@@ -30,13 +30,7 @@ class Sidebar(ctk.CTkFrame):
 
         self.create_buttons(nav_container, show_decks)
 
-        db = Database()
-        user_info = db.get_user(self.user_id)
-        if user_info:
-            username = user_info["username"]
-        else:
-            username = "User"
-        db.close()
+        
         self.create_bottom_section(username)
 
     def create_buttons(self, parent, show_decks):

@@ -771,11 +771,8 @@ class EditCardDialog(BaseDialog):
 
     # when save card button clicked, call save_card to update the database with new card info
     def save_card(self):
-        # for CTkTextbox, you must specify a range when retrieving text.
-        # in ("1.0", "end-1c"), the 1 means start at the first line and the 0 means start at the first character of this line
-        # then "end-1c" means retrieve all text from the first character to the last character, and also remove the trailing newline
-        new_question = self.question_entry.get("1.0", "end-1c").strip()
-        new_answer = self.answer_entry.get("1.0", "end-1c").strip()
+        new_question = self.question_entry.get("1.0", "end").strip()
+        new_answer = self.answer_entry.get("1.0", "end").strip()
         if not new_question or not new_answer:
             messagebox.showwarning("Warning", "Please fill in both question and answer")
             return
@@ -840,11 +837,8 @@ class AddCardDialog(BaseDialog):
 
     # when save card button clicked, call save_card to add the card to the database
     def save_card(self):
-        # for CTkTextbox, you must specify a range when retrieving text.
-        # in ("1.0", "end-1c"), the 1 means start at the first line and the 0 means start at the first character of this line
-        # then "end-1c" means retrieve all text from the first character to the last character, and also remove the trailing newline
-        question = self.question_entry.get("1.0", "end-1c").strip()
-        answer = self.answer_entry.get("1.0", "end-1c").strip()
+        question = self.question_entry.get("1.0", "end").strip()
+        answer = self.answer_entry.get("1.0", "end").strip()
         if not question or not answer:
             messagebox.showwarning("Warning", "Please fill in both question and answer")
             return

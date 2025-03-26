@@ -24,7 +24,7 @@ class BaseDialog(ctk.CTkToplevel):
         self.container = ctk.CTkFrame(self, fg_color="transparent", corner_radius=12)
         self.container.pack(fill="both", expand=True, padx=20, pady=20)
 
-        self.protocol("WM_DELETE_WINDOW", self.cancel_dialog_event) # cancel event called when X button on dialog window clicked
+        self.protocol("WM_DELETE_WINDOW", self.cancel_event) # cancel event called when X button on dialog window clicked
         self.grab_set() # locks focus onto the dialog, preventing the user clicking on anything outside the dialog
 
     # window title for dialog
@@ -79,7 +79,7 @@ class BasePage(ctk.CTkFrame):
 
         self.user_id = user_id
         self.switch_page = switch_page
-            
+        
         # create and pack the sidebar on the screen
         self.sidebar = Sidebar(self, switch_page, self.user_id)
         self.sidebar.pack(side="left", fill="y")
@@ -90,5 +90,6 @@ class BasePage(ctk.CTkFrame):
 class BaseContainer(ctk.CTkFrame):
     # initialises the base container as a subclass of CTkFrame (inheritance)
     # initialises base container with corner radius, border width, border colour, foreground colour
-    def __init__(self, master,corner_radius=12,border_width=1,border_color="#E5E7EB",fg_color="white"):
-        super().__init__(master,corner_radius=corner_radius,border_width=border_width,border_color=border_color,fg_color=fg_color)
+    def __init__(self, master, corner_radius=12, border_width=1, border_color="#E5E7EB", fg_color="white"):
+        super().__init__(master, corner_radius=corner_radius, border_width=border_width, border_color=border_color, fg_color=fg_color)
+   

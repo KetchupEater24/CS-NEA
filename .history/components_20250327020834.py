@@ -79,9 +79,14 @@ class BasePage(ctk.CTkFrame):
 
         self.user_id = user_id
         self.switch_page = switch_page
+
+        self.db = Database()
+        self.user = self.db.get_user(user_id)
+        if self.user:
+            self.username = self.user["username"]
             
         # create and pack the sidebar on the screen
-        self.sidebar = Sidebar(self, switch_page, self.user_id)
+        self.sidebar = Sidebar(self, switch_page, self.username, self.user_id)
         self.sidebar.pack(side="left", fill="y")
 
         self.main_header_content = ctk.CTkFrame(self, fg_color="white")
