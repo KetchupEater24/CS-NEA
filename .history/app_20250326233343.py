@@ -1106,7 +1106,7 @@ class QuizPage(BasePage):
                 col = 0
                 row += 1
 
-   # when a checkbox is toggled, it passes deck_id 
+   
     def toggle_deck_selection(self, deck_id, selected):
         for widget in self.decks_frame.winfo_children():
             if widget.deck_id == deck_id:

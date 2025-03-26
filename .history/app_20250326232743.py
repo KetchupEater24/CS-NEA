@@ -371,18 +371,25 @@ class DeckContainer(BaseContainer):
             hover_color="#ffffff"
         )
         self.checkbox.place(relx=1.0, rely=0.0, anchor="ne", x=-10, y=10)
-            
+
+    # called when the checkbox is toggled, updates the colour of checkbox to purple
     def on_checkbox_toggle(self):
         self.selected = self.checkbox.get()
         if self.selection_callback:
             self.selection_callback(self.deck_id, self.selected)
         if self.selected:
             self.configure(fg_color="#F5F3FF")
-            self.checkbox.configure(fg_color="#636ae8", checkmark_color="white", hover_color="#636ae8")
+            self.checkbox.configure(
+                fg_color="#636ae8",
+                checkmark_color="white"
+            )
         else:
             self.configure(fg_color="white")
-            self.checkbox.configure(fg_color="white", checkmark_color="black", hover_color="white")
-
+            self.checkbox.configure(
+                fg_color="white",
+                checkmark_color="black"
+            )
+            
 class CardContainer(BaseContainer):
     # initialises card container as subclass of base container (inheritance)
     def __init__(self, master, card_id, question, answer, edit_callback, delete_callback, ef, selection_callback=None):
@@ -473,17 +480,25 @@ class CardContainer(BaseContainer):
             hover_color="#ffffff"
         )
         self.checkbox.place(relx=1.0, rely=0.0, anchor="ne", x=-10, y=10)
-    
+
+    # changes checkbox colour to purple on toggle
     def on_checkbox_toggle(self):
         self.selected = self.checkbox.get()
         if self.selection_callback:
             self.selection_callback(self.card_id, self.selected)
         if self.selected:
             self.configure(fg_color="#F5F3FF")
-            self.checkbox.configure(fg_color="#636ae8", checkmark_color="white", hover_color="#636ae8")
+            self.checkbox.configure(
+                fg_color="#636ae8",
+                checkmark_color="white"
+            )
         else:
             self.configure(fg_color="white")
-            self.checkbox.configure(fg_color="white", checkmark_color="black", hover_color="white")
+            self.checkbox.configure(
+                fg_color="white",
+                checkmark_color="black",
+                hover_color="white"
+            )
 
 class CardsPage(BasePage):
     def __init__(self, master, user_id, deck_id, switch_page):
@@ -1106,7 +1121,7 @@ class QuizPage(BasePage):
                 col = 0
                 row += 1
 
-   # when a checkbox is toggled, it passes deck_id 
+   
     def toggle_deck_selection(self, deck_id, selected):
         for widget in self.decks_frame.winfo_children():
             if widget.deck_id == deck_id:
@@ -1121,12 +1136,7 @@ class QuizPage(BasePage):
                 widget.selected = False
                 widget.configure(fg_color="white")
                 widget.checkbox.deselect()
-        any_selected = False
-        for widget in self.decks_frame.winfo_children():
-            if widget.selected:
-                any_selected = True
-                break
-        self.start_button.configure(state="normal" if any_selected else "disabled")
+        self.start_button.configure(state="normal" if selected else "disabled")
 
     def start_quiz(self):
         # Find the selected deck by iterating over deck containers
