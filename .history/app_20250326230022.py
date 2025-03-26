@@ -86,7 +86,7 @@ class DecksPage(BasePage):
         )
         self.add_button.pack(side="left", padx=5)
 
-        self.delete_selected_button = ctk.CTkButton(
+        self.delete_button = ctk.CTkButton(
             self.buttons_frame,
             text="Delete Selected",
             width=70,
@@ -98,7 +98,7 @@ class DecksPage(BasePage):
             state="disabled",
             command=self.delete_selected_decks
         )
-        self.delete_selected_button.pack(side="left", padx=5)
+        self.delete_button.pack(side="left", padx=5)
 
         # separator, seperates header from the decks frame below
         self.separator = ctk.CTkFrame(self.main_header_content, height=1, fg_color="#E5E7EB")
@@ -114,7 +114,7 @@ class DecksPage(BasePage):
         self.decks_frame.pack(fill="both", expand=True, padx=30, pady=20)
         self.decks_frame.grid_columnconfigure((0, 1, 2), weight=1, pad=10)
 
-        # calls update_deck_list to show decks, when decks  page is shown
+        # calls update_deck_list to show decks on first load of the decks page
         # is used whenever a change happens to decks, such as deleting a deck
         self.update_deck_list()
 
@@ -236,14 +236,14 @@ class DecksPage(BasePage):
             self.update_deck_list()
             self.sidebar.update_deck_list()
 
-    # adds any deck that is selected to selected decks and updates the styling of delete selected button to normal 
-    # if deck(s) have been selected
+
+    # adds selected decks to selected_decks, if checkbox clicked
     def toggle_deck_selection(self, deck_id, is_selected):
         if is_selected:
             self.selected_decks.add(deck_id)
         else:
             self.selected_decks.discard(deck_id)
-        self.delete_selected_button.configure(state="normal" if self.selected_decks else "disabled")
+        self.delete_button.configure(state="normal" if self.selected_decks else "disabled")
         
     # deletes all selected decks upon clicking delete selected button
     def delete_selected_decks(self):
@@ -257,7 +257,7 @@ class DecksPage(BasePage):
             self.update_deck_list()
             if hasattr(self, 'sidebar'):
                 self.sidebar.update_deck_list()
-            self.delete_selected_button.configure(state="disabled")
+            self.delete_button.configure(state="disabled")
 
 class DeckContainer(BaseContainer):
     # initialises deck cotnainer as subclass of base container (inheritance)
@@ -568,7 +568,7 @@ class CardsPage(BasePage):
         self.card_priority_filter_selection.trace_add("write", lambda *args: self.update_card_list())
 
         # delete selected cards button, which is initially disabled (only enabled if checkbox(es) clicked)
-        self.delete_selected_button = ctk.CTkButton(
+        self.delete_cards_button = ctk.CTkButton(
             self.header_frame,
             text="Delete Selected",
             width=120,
@@ -580,7 +580,7 @@ class CardsPage(BasePage):
             state="disabled",
             command=self.delete_selected_cards
         )
-        self.delete_selected_button.pack(side="right", padx=5)
+        self.delete_cards_button.pack(side="right", padx=5)
 
         # add card button, which allows user to add card by calling add card
         # add card then opens a dialog to enter card info
@@ -699,7 +699,7 @@ class CardsPage(BasePage):
         EditCardDialog(self, card_id)
         self.update_card_list()
 
-    # deletes a card
+    # deletes a card after confirmation
     def delete_card(self, card_id):
         if messagebox.askyesno("Delete Card", "Are you sure you want to delete this card?"):
             self.db.delete_card(card_id)
@@ -712,9 +712,9 @@ class CardsPage(BasePage):
             self.selected_cards.add(card_id)
         else:
             self.selected_cards.discard(card_id)
-        self.delete_selected_button.configure(state="normal" if self.selected_cards else "disabled")
+        self.delete_cards_button.configure(state="normal" if self.selected_cards else "disabled")
 
-    # deletes all selected decks upon clicking delete selected button
+    # deletes all selected cards after user confirmation
     def delete_selected_cards(self):
         if not self.selected_cards:
             return
@@ -723,7 +723,7 @@ class CardsPage(BasePage):
                 self.db.delete_card(card_id)
             self.selected_cards.clear()
             self.update_card_list()
-            self.delete_selected_button.configure(state="disabled")
+            self.delete_cards_button.configure(state="disabled")
 
 class EditCardDialog(BaseDialog):
     # initialise edit card dialog as subclass of basedialog (inheritance)
@@ -1036,17 +1036,18 @@ class QuizPage(BasePage):
         self.decks_frame.pack(fill="both", expand=True)
         self.decks_frame.grid_columnconfigure((0, 1, 2), weight=1, pad=10)
 
-        # calls update_deck_list to show decks, when quiz page is shown
+        # Load decks initially
         self.update_deck_list()
 
-    # refer to decks page for comments explaining the below function
     def update_deck_list(self):
+        # Clear existing deck containers
         for widget in self.decks_frame.winfo_children():
             widget.destroy()
 
         db = self.db
         deck_list = []
         decks = db.get_decks(self.user_id)
+        # Build deck_list as tuples: (deck_id, deck_name, avg_ef, card_count)
         for deck in decks:
             deck_id = deck[0]
             deck_name = deck[1]
@@ -1061,6 +1062,7 @@ class QuizPage(BasePage):
             card_count = db.get_card_count(deck_id)
             deck_list.append((deck_id, deck_name, avg_ef, card_count))
 
+        # Filter deck_list by search query
         search_query = self.deck_search_input.get().lower().strip()
         if search_query:
             filtered_deck_list = []
@@ -1069,6 +1071,7 @@ class QuizPage(BasePage):
                     filtered_deck_list.append(deck)
             deck_list = filtered_deck_list
 
+        # Filter deck_list by priority using avg_ef
         priority_filter = self.deck_priority_filter_selection.get().lower()
         if priority_filter != "all":
             filtered_deck_list = []
@@ -1097,6 +1100,7 @@ class QuizPage(BasePage):
             ).pack(expand=True, pady=50)
             return
 
+        # Sort decks using a BST based on avg_ef (as in DecksPage)
         from graph import DeckNode, insert_node, in_order
         root = None
         for deck in deck_list:
@@ -1104,8 +1108,10 @@ class QuizPage(BasePage):
             root = insert_node(root, node)
         sorted_nodes = in_order(root)
 
+        # Place deck containers in a 3-column grid
         row, col = 0, 0
         for node in sorted_nodes:
+            # Create a deck container with no edit/delete callbacks (set to None)
             deck_container = DeckContainer(
                 self.decks_frame,
                 deck_id=node.deck_id,
@@ -1122,22 +1128,30 @@ class QuizPage(BasePage):
                 col = 0
                 row += 1
 
-   
-    def toggle_deck_selection(self, deck_id, selected):
+        # Enable the start button if any deck container is selected.
+        # Since we do not store the selection in an attribute, check each deck container.
+        selected_found = False
         for widget in self.decks_frame.winfo_children():
-            if widget.deck_id == deck_id:
-                widget.selected = selected
-                if selected:
-                    widget.configure(fg_color="#F5F3FF")
-                    widget.checkbox.select()
-                else:
-                    widget.configure(fg_color="white")
+            if hasattr(widget, "selected") and widget.selected:
+                selected_found = True
+                break
+        self.start_button.configure(state="normal" if selected_found else "disabled")
+
+    def toggle_deck_selection(self, deck_id, selected):
+        # When a deck container is toggled, deselect all others.
+        for widget in self.decks_frame.winfo_children():
+            if hasattr(widget, "deck_id") and widget.deck_id != deck_id:
+                if widget.selected:
+                    widget.selected = False
                     widget.checkbox.deselect()
-            else:
-                widget.selected = False
-                widget.configure(fg_color="white")
-                widget.checkbox.deselect()
-        self.start_button.configure(state="normal" if selected else "disabled")
+                    widget.configure(fg_color="white")
+        # After toggling, update the start button based on whether any deck is selected.
+        selected_found = False
+        for widget in self.decks_frame.winfo_children():
+            if hasattr(widget, "selected") and widget.selected:
+                selected_found = True
+                break
+        self.start_button.configure(state="normal" if selected_found else "disabled")
 
     def start_quiz(self):
         # Find the selected deck by iterating over deck containers

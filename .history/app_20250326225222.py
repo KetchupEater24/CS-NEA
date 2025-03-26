@@ -69,7 +69,7 @@ class DecksPage(BasePage):
         self.deck_search_input.trace_add("write", lambda *args: self.update_deck_list())
         self.deck_priority_filter_selection.trace_add("write", lambda *args: self.update_deck_list())
 
-        # buttons frame, holds the add button and delete selected button on the right side of the header frame
+        # buttons frame: holds the add button and delete selected button on the right side of the header frame
         self.buttons_frame = ctk.CTkFrame(self.header_frame, fg_color="transparent")
         self.buttons_frame.pack(side="right")
 
@@ -86,7 +86,7 @@ class DecksPage(BasePage):
         )
         self.add_button.pack(side="left", padx=5)
 
-        self.delete_selected_button = ctk.CTkButton(
+        self.delete_button = ctk.CTkButton(
             self.buttons_frame,
             text="Delete Selected",
             width=70,
@@ -98,7 +98,7 @@ class DecksPage(BasePage):
             state="disabled",
             command=self.delete_selected_decks
         )
-        self.delete_selected_button.pack(side="left", padx=5)
+        self.delete_button.pack(side="left", padx=5)
 
         # separator, seperates header from the decks frame below
         self.separator = ctk.CTkFrame(self.main_header_content, height=1, fg_color="#E5E7EB")
@@ -114,7 +114,7 @@ class DecksPage(BasePage):
         self.decks_frame.pack(fill="both", expand=True, padx=30, pady=20)
         self.decks_frame.grid_columnconfigure((0, 1, 2), weight=1, pad=10)
 
-        # calls update_deck_list to show decks, when decks  page is shown
+        # calls update_deck_list to show decks on first load of the decks page
         # is used whenever a change happens to decks, such as deleting a deck
         self.update_deck_list()
 
@@ -236,14 +236,14 @@ class DecksPage(BasePage):
             self.update_deck_list()
             self.sidebar.update_deck_list()
 
-    # adds any deck that is selected to selected decks and updates the styling of delete selected button to normal 
-    # if deck(s) have been selected
+
+    # adds selected decks to selected_decks, if checkbox clicked
     def toggle_deck_selection(self, deck_id, is_selected):
         if is_selected:
             self.selected_decks.add(deck_id)
         else:
             self.selected_decks.discard(deck_id)
-        self.delete_selected_button.configure(state="normal" if self.selected_decks else "disabled")
+        self.delete_button.configure(state="normal" if self.selected_decks else "disabled")
         
     # deletes all selected decks upon clicking delete selected button
     def delete_selected_decks(self):
@@ -257,7 +257,7 @@ class DecksPage(BasePage):
             self.update_deck_list()
             if hasattr(self, 'sidebar'):
                 self.sidebar.update_deck_list()
-            self.delete_selected_button.configure(state="disabled")
+            self.delete_button.configure(state="disabled")
 
 class DeckContainer(BaseContainer):
     # initialises deck cotnainer as subclass of base container (inheritance)
@@ -568,7 +568,7 @@ class CardsPage(BasePage):
         self.card_priority_filter_selection.trace_add("write", lambda *args: self.update_card_list())
 
         # delete selected cards button, which is initially disabled (only enabled if checkbox(es) clicked)
-        self.delete_selected_button = ctk.CTkButton(
+        self.delete_cards_button = ctk.CTkButton(
             self.header_frame,
             text="Delete Selected",
             width=120,
@@ -580,7 +580,7 @@ class CardsPage(BasePage):
             state="disabled",
             command=self.delete_selected_cards
         )
-        self.delete_selected_button.pack(side="right", padx=5)
+        self.delete_cards_button.pack(side="right", padx=5)
 
         # add card button, which allows user to add card by calling add card
         # add card then opens a dialog to enter card info
@@ -699,7 +699,7 @@ class CardsPage(BasePage):
         EditCardDialog(self, card_id)
         self.update_card_list()
 
-    # deletes a card
+    # deletes a card after confirmation
     def delete_card(self, card_id):
         if messagebox.askyesno("Delete Card", "Are you sure you want to delete this card?"):
             self.db.delete_card(card_id)
@@ -712,9 +712,9 @@ class CardsPage(BasePage):
             self.selected_cards.add(card_id)
         else:
             self.selected_cards.discard(card_id)
-        self.delete_selected_button.configure(state="normal" if self.selected_cards else "disabled")
+        self.delete_cards_button.configure(state="normal" if self.selected_cards else "disabled")
 
-    # deletes all selected decks upon clicking delete selected button
+    # deletes all selected cards after user confirmation
     def delete_selected_cards(self):
         if not self.selected_cards:
             return
@@ -723,7 +723,7 @@ class CardsPage(BasePage):
                 self.db.delete_card(card_id)
             self.selected_cards.clear()
             self.update_card_list()
-            self.delete_selected_button.configure(state="disabled")
+            self.delete_cards_button.configure(state="disabled")
 
 class EditCardDialog(BaseDialog):
     # initialise edit card dialog as subclass of basedialog (inheritance)
@@ -945,17 +945,211 @@ class AddDeckDialog(BaseDialog):
         except Exception as e:
             messagebox.showerror("Error", f"Failed to create deck: {str(e)}")
 
+# class QuizPage(BasePage):
+#     def __init__(self, master, user_id, switch_page):
+#         super().__init__(master, user_id, switch_page)
+#         self.selected_deck = None  # Only one deck can be selected
+#         self.deck_containers = {}  # To store references to deck containers
+
+#         # Header for quiz page (deck selection)
+#         header_frame = ctk.CTkFrame(self.main_header_content, fg_color="transparent")
+#         header_frame.pack(fill="x", padx=30, pady=(20, 0))
+#         ctk.CTkLabel(header_frame, text="Quiz", font=("Inter", 24, "bold"), text_color="black").pack(side="left")
+
+#         controls_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
+#         controls_frame.pack(side="right")
+
+#         self.deck_search_input = ctk.StringVar()
+#         self.deck_search_entry_field = ctk.CTkEntry(
+#             controls_frame,
+#             textvariable=self.deck_search_input,
+#             placeholder_text="Search deck",
+#             placeholder_text_color="#D1D1D1",
+#             text_color="#000000",
+#             fg_color="white",
+#             border_color="#e5e7eb",
+#             width=150
+#         )
+#         self.deck_search_entry_field.pack(side="left", padx=(0, 20))
+
+#         self.deck_priority_filter_selection = ctk.StringVar(value="All")
+#         self.deck_priority_filter_menu = ctk.CTkOptionMenu(
+#             controls_frame,
+#             values=["All", "High", "Medium", "Low"],
+#             variable=self.deck_priority_filter_selection,
+#             width=120,
+#             fg_color="white",
+#             button_color="#F3F4F6",
+#             button_hover_color="#E5E7EB",
+#             text_color="#111827"
+#         )
+#         self.deck_priority_filter_menu.pack(side="left", padx=(0, 20))
+
+#         self.deck_search_input.trace_add("write", lambda *args: self.update_deck_list())
+#         self.deck_priority_filter_selection.trace_add("write", lambda *args: self.update_deck_list())
+
+#         self.start_button = ctk.CTkButton(
+#             controls_frame,
+#             text="Start Quiz",
+#             width=120,
+#             height=32,
+#             corner_radius=16,
+#             fg_color="#F3F4F6",
+#             text_color="black",
+#             hover_color="#E5E7EB",
+#             state="disabled",
+#             command=self.start_quiz
+#         )
+#         self.start_button.pack(side="left", padx=(0, 10))
+
+#         separator = ctk.CTkFrame(self.main_header_content, height=1, fg_color="#E5E7EB")
+#         separator.pack(fill="x", padx=30, pady=(20, 0))
+
+#         self.selection_frame = ctk.CTkFrame(self.main_header_content, fg_color="transparent")
+#         self.selection_frame.pack(fill="both", expand=True, padx=30, pady=20)
+
+#         ctk.CTkLabel(
+#             self.selection_frame,
+#             text="Select a deck to quiz yourself on",
+#             font=("Inter", 16, "bold"),
+#             text_color="black"
+#         ).pack(anchor="w", pady=(0, 10))
+
+#         self.decks_frame = ctk.CTkScrollableFrame(
+#             self.selection_frame,
+#             fg_color="transparent",
+#             scrollbar_button_color="#E5E7EB",
+#             scrollbar_button_hover_color="#D1D5DB"
+#         )
+#         self.decks_frame.pack(fill="both", expand=True)
+#         self.decks_frame.grid_columnconfigure((0, 1), weight=1, pad=20)
+
+#         self.update_deck_list()
+
+#     def update_deck_list(self):
+#         # Clear existing decks and container references
+#         for widget in self.decks_frame.winfo_children():
+#             widget.destroy()
+#         self.deck_containers = {}
+
+#         # Configure 3 columns to have the same weight & uniform width
+#         for i in range(3):
+#             self.decks_frame.grid_columnconfigure(i, weight=1, uniform="deck_col")
+
+#         db = self.db
+#         decks = db.get_decks(self.user_id)
+#         deck_list = []
+
+#         # Build deck_list with average EF, card count, etc.
+#         for deck_id, deck_name in decks:
+#             cards = db.get_cards(deck_id)
+#             if cards:
+#                 total_ef = sum(db.get_card_easiness(self.user_id, c[0]) for c in cards)
+#                 avg_ef = total_ef / len(cards)
+#             else:
+#                 avg_ef = 2.5
+#             card_count = db.get_card_count(deck_id)
+#             deck_list.append((deck_id, deck_name, avg_ef, card_count))
+
+#         # Apply search filter
+#         search_query = self.deck_search_input.get().lower().strip()
+#         if search_query:
+#             deck_list = [d for d in deck_list if search_query in d[1].lower()]
+
+#         # Apply priority filter
+#         priority_filter = self.deck_priority_filter_selection.get().lower()
+#         if priority_filter != "all":
+#             if priority_filter == "high":
+#                 deck_list = [d for d in deck_list if d[2] < 2.0]
+#             elif priority_filter == "medium":
+#                 deck_list = [d for d in deck_list if 2.0 <= d[2] < 2.5]
+#             elif priority_filter == "low":
+#                 deck_list = [d for d in deck_list if d[2] >= 2.5]
+
+#         if not deck_list:
+#             no_decks_frame = ctk.CTkFrame(self.decks_frame, fg_color="transparent")
+#             no_decks_frame.pack(fill="both", expand=True)
+#             ctk.CTkLabel(
+#                 no_decks_frame,
+#                 text="No decks found",
+#                 font=("Inter", 16, "bold"),
+#                 text_color="#4B5563"
+#             ).pack(expand=True, pady=50)
+#             return
+
+#         # Build a BST based on avg_ef
+#         from graph import DeckNode, insert_node, in_order
+#         root = None
+#         for d in deck_list:
+#             node = DeckNode(deck_id=d[0], deck_name=d[1], avg_ef=d[2], card_count=d[3])
+#             root = insert_node(root, node)
+
+#         # Sort the decks by in-order traversal
+#         sorted_nodes = in_order(root)
+
+#         # Place deck containers in a 3-column grid
+#         row, col = 0, 0
+#         for node in sorted_nodes:
+#             deck_container = DeckContainer(
+#                 self.decks_frame,
+#                 deck_id=node.deck_id,
+#                 deck_name=node.deck_name,
+#                 card_count=node.card_count,
+#                 selection_callback=self.toggle_deck_selection,
+#                 avg_ef=node.avg_ef,
+#                 edit_callback=None,  # Added callback for editing deck
+#                 delete_callback=None  # Added callback for deleting deck
+#             )
+#             deck_container.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+#             self.deck_containers[node.deck_id] = deck_container
+
+#             col += 1
+#             if col == 3:
+#                 col = 0
+#                 row += 1
+
+#         # Enable/disable start button based on whether a deck is selected
+#         self.start_button.configure(state="normal" if self.selected_deck is not None else "disabled")
+
+
+
+#     def toggle_deck_selection(self, deck_id, selected):
+#         # When a deck is selected, deselect any previously selected deck
+#         if selected:
+#             if self.selected_deck is not None and self.selected_deck != deck_id:
+#                 # Deselect the previously selected deck container
+#                 prev_container = self.deck_containers.get(self.selected_deck)
+#                 if prev_container:
+#                     prev_container.selected = False
+#                     prev_container.checkbox.deselect()
+#                     prev_container.configure(fg_color="white")
+#             self.selected_deck = deck_id
+#         else:
+#             if self.selected_deck == deck_id:
+#                 self.selected_deck = None
+
+#         # Enable/disable start button based on whether a deck is selected
+#         self.start_button.configure(state="normal" if self.selected_deck is not None else "disabled")
+
+#     def start_quiz(self):
+#         if self.selected_deck is None:
+#             messagebox.showwarning("Warning", "Please select a deck")
+#             return
+#         for widget in self.master.winfo_children():
+#             widget.destroy()
+#         # Start quiz session with the selected deck
+#         QuizSession(self.master, self.user_id, self.selected_deck, self.switch_page)
 
 class QuizPage(BasePage):
-    # initialise quiz page as subclass of base page  (inheritance)
     def __init__(self, master, user_id, switch_page):
         super().__init__(master, user_id, switch_page)
+        # No separate selected_deck or deck_containers attributes needed
 
-        # create header frame (for title, start quiz button, search bar, etc.)
+        # Build header frame exactly as in DecksPage
         self.header_frame = ctk.CTkFrame(self.main_header_content, fg_color="transparent")
         self.header_frame.pack(fill="x", padx=30, pady=(20, 0))
 
-        # page title
+        # Page title label
         self.header_title = ctk.CTkLabel(
             self.header_frame,
             text="Quiz",
@@ -964,11 +1158,10 @@ class QuizPage(BasePage):
         )
         self.header_title.pack(side="left")
 
-        # filter frame to hold priority selection and search field (works same way as it does in decks page)
-        # refer to decks page for comments that explain the below code
+        # Search and filter (built exactly like in DecksPage)
         self.filter_frame = ctk.CTkFrame(self.header_frame, fg_color="transparent")
         self.filter_frame.pack(side="right", padx=10)
-        
+
         self.deck_search_input = ctk.StringVar()
         self.deck_search_entry_field = ctk.CTkEntry(
             self.filter_frame,
@@ -994,11 +1187,12 @@ class QuizPage(BasePage):
             text_color="#111827"
         )
         self.deck_priority_filter_menu.pack(side="left", padx=5)
-        
+
+        # Trace changes in search and filter to update deck list
         self.deck_search_input.trace_add("write", lambda *args: self.update_deck_list())
         self.deck_priority_filter_selection.trace_add("write", lambda *args: self.update_deck_list())
 
-        # start quiz button
+        # Start quiz button (placed on the right side of header)
         self.start_button = ctk.CTkButton(
             self.header_frame,
             text="Start Quiz",
@@ -1013,11 +1207,11 @@ class QuizPage(BasePage):
         )
         self.start_button.pack(side="right", padx=(0, 10))
 
-        # seperator, to seperate header from the main content of the page below
+        # Separator below the header
         self.separator = ctk.CTkFrame(self.main_header_content, height=1, fg_color="#E5E7EB")
         self.separator.pack(fill="x", padx=30, pady=(20, 0))
 
-        # selection frame holds a label to tell the user to select decks for a quiz
+        # Selection frame to display deck containers
         self.selection_frame = ctk.CTkFrame(self.main_header_content, fg_color="transparent")
         self.selection_frame.pack(fill="both", expand=True, padx=30, pady=20)
         ctk.CTkLabel(
@@ -1034,19 +1228,22 @@ class QuizPage(BasePage):
             scrollbar_button_hover_color="#D1D5DB"
         )
         self.decks_frame.pack(fill="both", expand=True)
-        self.decks_frame.grid_columnconfigure((0, 1, 2), weight=1, pad=10)
+        # Configure three columns for uniform width, as in DecksPage
+        for i in range(3):
+            self.decks_frame.grid_columnconfigure(i, weight=1, pad=10)
 
-        # calls update_deck_list to show decks, when quiz page is shown
+        # Load decks initially
         self.update_deck_list()
 
-    # refer to decks page for comments explaining the below function
     def update_deck_list(self):
+        # Clear existing deck containers
         for widget in self.decks_frame.winfo_children():
             widget.destroy()
 
         db = self.db
         deck_list = []
         decks = db.get_decks(self.user_id)
+        # Build deck_list as tuples: (deck_id, deck_name, avg_ef, card_count)
         for deck in decks:
             deck_id = deck[0]
             deck_name = deck[1]
@@ -1061,6 +1258,7 @@ class QuizPage(BasePage):
             card_count = db.get_card_count(deck_id)
             deck_list.append((deck_id, deck_name, avg_ef, card_count))
 
+        # Filter deck_list by search query
         search_query = self.deck_search_input.get().lower().strip()
         if search_query:
             filtered_deck_list = []
@@ -1069,6 +1267,7 @@ class QuizPage(BasePage):
                     filtered_deck_list.append(deck)
             deck_list = filtered_deck_list
 
+        # Filter deck_list by priority using avg_ef
         priority_filter = self.deck_priority_filter_selection.get().lower()
         if priority_filter != "all":
             filtered_deck_list = []
@@ -1097,6 +1296,7 @@ class QuizPage(BasePage):
             ).pack(expand=True, pady=50)
             return
 
+        # Sort decks using a BST based on avg_ef (as in DecksPage)
         from graph import DeckNode, insert_node, in_order
         root = None
         for deck in deck_list:
@@ -1104,8 +1304,10 @@ class QuizPage(BasePage):
             root = insert_node(root, node)
         sorted_nodes = in_order(root)
 
+        # Place deck containers in a 3-column grid
         row, col = 0, 0
         for node in sorted_nodes:
+            # Create a deck container with no edit/delete callbacks (set to None)
             deck_container = DeckContainer(
                 self.decks_frame,
                 deck_id=node.deck_id,
@@ -1122,22 +1324,30 @@ class QuizPage(BasePage):
                 col = 0
                 row += 1
 
-   
-    def toggle_deck_selection(self, deck_id, selected):
+        # Enable the start button if any deck container is selected.
+        # Since we do not store the selection in an attribute, check each deck container.
+        selected_found = False
         for widget in self.decks_frame.winfo_children():
-            if widget.deck_id == deck_id:
-                widget.selected = selected
-                if selected:
-                    widget.configure(fg_color="#F5F3FF")
-                    widget.checkbox.select()
-                else:
-                    widget.configure(fg_color="white")
+            if hasattr(widget, "selected") and widget.selected:
+                selected_found = True
+                break
+        self.start_button.configure(state="normal" if selected_found else "disabled")
+
+    def toggle_deck_selection(self, deck_id, selected):
+        # When a deck container is toggled, deselect all others.
+        for widget in self.decks_frame.winfo_children():
+            if hasattr(widget, "deck_id") and widget.deck_id != deck_id:
+                if widget.selected:
+                    widget.selected = False
                     widget.checkbox.deselect()
-            else:
-                widget.selected = False
-                widget.configure(fg_color="white")
-                widget.checkbox.deselect()
-        self.start_button.configure(state="normal" if selected else "disabled")
+                    widget.configure(fg_color="white")
+        # After toggling, update the start button based on whether any deck is selected.
+        selected_found = False
+        for widget in self.decks_frame.winfo_children():
+            if hasattr(widget, "selected") and widget.selected:
+                selected_found = True
+                break
+        self.start_button.configure(state="normal" if selected_found else "disabled")
 
     def start_quiz(self):
         # Find the selected deck by iterating over deck containers

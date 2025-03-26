@@ -236,8 +236,9 @@ class DecksPage(BasePage):
             self.update_deck_list()
             self.sidebar.update_deck_list()
 
+
     # adds any deck that is selected to selected decks and updates the styling of delete selected button to normal 
-    # if deck(s) have been selected
+    # if card(s) have been selected
     def toggle_deck_selection(self, deck_id, is_selected):
         if is_selected:
             self.selected_decks.add(deck_id)
@@ -699,7 +700,7 @@ class CardsPage(BasePage):
         EditCardDialog(self, card_id)
         self.update_card_list()
 
-    # deletes a card
+    # deletes a card after confirmation
     def delete_card(self, card_id):
         if messagebox.askyesno("Delete Card", "Are you sure you want to delete this card?"):
             self.db.delete_card(card_id)
@@ -714,7 +715,7 @@ class CardsPage(BasePage):
             self.selected_cards.discard(card_id)
         self.delete_selected_button.configure(state="normal" if self.selected_cards else "disabled")
 
-    # deletes all selected decks upon clicking delete selected button
+    # deletes all selected cards after user confirmation
     def delete_selected_cards(self):
         if not self.selected_cards:
             return
@@ -1122,22 +1123,30 @@ class QuizPage(BasePage):
                 col = 0
                 row += 1
 
-   
-    def toggle_deck_selection(self, deck_id, selected):
+        # if there a deck has been selected, set selected_found = True and 
+        # change styling of start button to normal (e.g enable it)
+        selected_found = False
         for widget in self.decks_frame.winfo_children():
-            if widget.deck_id == deck_id:
-                widget.selected = selected
-                if selected:
-                    widget.configure(fg_color="#F5F3FF")
-                    widget.checkbox.select()
-                else:
-                    widget.configure(fg_color="white")
+            if hasattr(widget, "selected") and widget.selected:
+                selected_found = True
+                break
+        self.start_button.configure(state="normal" if selected_found else "disabled")
+
+    def toggle_deck_selection(self, deck_id, selected):
+        # When a deck container is toggled, deselect all others.
+        for widget in self.decks_frame.winfo_children():
+            if hasattr(widget, "deck_id") and widget.deck_id != deck_id:
+                if widget.selected:
+                    widget.selected = False
                     widget.checkbox.deselect()
-            else:
-                widget.selected = False
-                widget.configure(fg_color="white")
-                widget.checkbox.deselect()
-        self.start_button.configure(state="normal" if selected else "disabled")
+                    widget.configure(fg_color="white")
+        # After toggling, update the start button based on whether any deck is selected.
+        selected_found = False
+        for widget in self.decks_frame.winfo_children():
+            if hasattr(widget, "selected") and widget.selected:
+                selected_found = True
+                break
+        self.start_button.configure(state="normal" if selected_found else "disabled")
 
     def start_quiz(self):
         # Find the selected deck by iterating over deck containers

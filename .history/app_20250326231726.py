@@ -1122,7 +1122,21 @@ class QuizPage(BasePage):
                 col = 0
                 row += 1
 
-   
+    # def toggle_deck_selection(self, deck_id, selected):
+    #     # When a deck container is toggled, deselect all others.
+    #     for widget in self.decks_frame.winfo_children():
+    #         if hasattr(widget, "deck_id") and widget.deck_id != deck_id:
+    #             if widget.selected:
+    #                 widget.selected = False
+    #                 widget.checkbox.deselect()
+    #                 widget.configure(fg_color="white")
+    #     # After toggling, update the start button based on whether any deck is selected.
+    #     selected_found = False
+    #     for widget in self.decks_frame.winfo_children():
+    #         if hasattr(widget, "selected") and widget.selected:
+    #             selected_found = True
+    #             break
+    #     self.start_button.configure(state="normal" if selected_found else "disabled")
     def toggle_deck_selection(self, deck_id, selected):
         for widget in self.decks_frame.winfo_children():
             if widget.deck_id == deck_id:
