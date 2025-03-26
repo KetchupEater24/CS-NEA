@@ -7,20 +7,22 @@ from sidebar import Sidebar
 class BaseDialog(ctk.CTkToplevel):
     # initialises the base dialog  as a subclass of CTkFrame (inheritance)
     # initialises base dialog with width and height    
-    def __init__(self, title="", width=int, height=int):
+    def __init__(self, title=""):
         super().__init__()
         self.title(title)
-        self.geometry(f"{width}x{height}")
         self.resizable(False, False) # makes sure the user cant resize the dialog window
         self.configure(fg_color="white")
 
         # centers the dialog on screen with the width and height and the x,y position for top left corner of dialog
+        self.update_idletasks()  # ensure geometry info is up-to-date
+        width = self.winfo_width()
+        height = self.winfo_height()
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         x = (screen_width - width) // 2
         y = (screen_height - height) // 2
-        self.geometry(f"{width}x{height}+{x}+{y}")
-
+        self.geometry(f"+{x}+{y}")
+        
         self.container = ctk.CTkFrame(self, fg_color="transparent", corner_radius=12)
         self.container.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -28,13 +30,13 @@ class BaseDialog(ctk.CTkToplevel):
         self.grab_set() # locks focus onto the dialog, preventing the user clicking on anything outside the dialog
 
     # window title for dialog
-    def create_dialog_title(self, text):
+    def create_title(self, text):
         label = ctk.CTkLabel(self.container, text=text, font=("Helvetica", 20, "bold"), text_color="black")
         label.pack(pady=(20, 10))
         return label
 
     # base styling for input fields
-    def create_dialog_input_field(self, initial_value=""):
+    def create_input_field(self, initial_value=""):
         entry = ctk.CTkEntry(
             self.container,
             width=300,
@@ -51,7 +53,7 @@ class BaseDialog(ctk.CTkToplevel):
         return entry
 
     # creates a button (to be used to execute dialog actions, e.g changing a deck name)
-    def create_dialog_button(self, text, command):
+    def create_button(self, text, command):
         button = ctk.CTkButton(
             self.container,
             text=text,
@@ -66,7 +68,7 @@ class BaseDialog(ctk.CTkToplevel):
         button.pack(pady=20)
         return button
 
-    def cancel_dialog_event(self):
+    def cancel_event(self):
         self.grab_release() # releases focus from the dialog, allowing the user to click on things outside the dialog
         self.destroy() # destroys the dialog
 

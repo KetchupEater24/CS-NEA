@@ -932,7 +932,7 @@ class AddDeckDialog(BaseDialog):
         self.create_dialog_button("Save Deck", self.save_deck)
         self.wait_window()
 
-    # when save deck button pressed, call save_deck to add the deck to database
+    # when 
     def save_deck(self):
         new_deck_name = self.deck_entry.get().strip()
         if not new_deck_name:
@@ -941,6 +941,7 @@ class AddDeckDialog(BaseDialog):
         try:
             db = Database()
             db.create_deck(self.parent.user_id, new_deck_name)
+            # simply close the dialog; the calling page should update the deck list
             self.cancel_dialog_event()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to create deck: {str(e)}")

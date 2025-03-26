@@ -726,7 +726,6 @@ class CardsPage(BasePage):
             self.delete_cards_button.configure(state="disabled")
 
 class EditCardDialog(BaseDialog):
-    # initialise edit card dialog as subclass of basedialog (inheritance)
     def __init__(self, parent, card_id):
         # set dialog size for editing a card
         super().__init__(title="Edit Card", width=500, height=500)
@@ -739,8 +738,8 @@ class EditCardDialog(BaseDialog):
         current_question = card_info['question']
         current_answer = card_info['answer']
 
-        # create dialog title (defined in basedialog)
-        self.create_dialog_title("Edit Card")
+        # create dialog title using base method
+        self.create_title("Edit Card")
 
         # create question section label
         ctk.CTkLabel(
@@ -749,8 +748,7 @@ class EditCardDialog(BaseDialog):
             font=("Inter", 14, "bold"),
             text_color="black"
         ).pack(fill="x", pady=(10, 5))
-        
-        # create textbox for the question
+        # create multi-line textbox for the question
         self.question_entry = ctk.CTkTextbox(
             self.container,
             height=100,
@@ -769,8 +767,7 @@ class EditCardDialog(BaseDialog):
             font=("Inter", 14, "bold"),
             text_color="black"
         ).pack(fill="x", pady=(10, 5))
-        
-        # create textbox for the answer
+        # create multi-line textbox for the answer
         self.answer_entry = ctk.CTkTextbox(
             self.container,
             height=100,
@@ -782,15 +779,15 @@ class EditCardDialog(BaseDialog):
         self.answer_entry.pack(fill="x", padx=10, pady=(0, 10))
         self.answer_entry.insert("1.0", current_answer)
 
+        # optionally add multimedia sections here if needed
 
-        # create save button (defined in basedialog)
-        self.create_dialog_button("Save Card", self.save_card)
+        # create save button using base dialog helper
+        self.create_button("Save Changes", self.save_card)
         self.wait_window()
 
-    # when save card button clicked, call save_card to update the database with new card info
     def save_card(self):
-        new_question = self.question_entry.get().strip()
-        new_answer = self.answer_entry.get().strip()
+        new_question = self.question_entry.get("1.0", "end-1c").strip()
+        new_answer = self.answer_entry.get("1.0", "end-1c").strip()
         if not new_question or not new_answer:
             messagebox.showwarning("Warning", "Please fill in both question and answer")
             return
@@ -798,19 +795,17 @@ class EditCardDialog(BaseDialog):
             db = Database()
             db.update_card(self.card_id, new_question, new_answer)
             # simply close the dialog; the calling page should update the cards list
-            self.cancel_dialog_event()
+            self.cancel_event()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to update card: {str(e)}")
 
 class AddCardDialog(BaseDialog):
-    # initialise add card dialog as subclass of base dialog (inheritance)
     def __init__(self, parent, deck_id):
         # set dialog size for creating a new card
         super().__init__(title="New Card", width=500, height=500)
         self.parent = parent
         self.deck_id = deck_id
-        # create title (defined in base dialog)
-        self.create_dialog_title("New Card")
+        self.create_title("New Card")
 
         # create question section label
         ctk.CTkLabel(
@@ -819,7 +814,7 @@ class AddCardDialog(BaseDialog):
             font=("Inter", 14, "bold"),
             text_color="black"
         ).pack(pady=(10, 5))
-        # create textbox for the question
+        # create multi-line textbox for the question
         self.question_entry = ctk.CTkTextbox(
             self.container,
             height=100,
@@ -837,8 +832,7 @@ class AddCardDialog(BaseDialog):
             font=("Inter", 14, "bold"),
             text_color="black"
         ).pack(pady=(10, 5))
-        
-        # createtextbox for the answer
+        # create multi-line textbox for the answer
         self.answer_entry = ctk.CTkTextbox(
             self.container,
             height=100,
@@ -849,14 +843,15 @@ class AddCardDialog(BaseDialog):
         )
         self.answer_entry.pack(fill="x", padx=10, pady=(0, 10))
 
-        # create save button (defined in base dialog)
-        self.create_dialog_button("Save Card", self.save_card)
+        # optionally add multimedia fields here
+
+        # create save button using base dialog helper
+        self.create_button("Save Card", self.save_card)
         self.wait_window()
 
-    # when save card button clicked, call save_card to add the card to the database
     def save_card(self):
-        question = self.question_entry.get().strip()
-        answer = self.answer_entry.get().strip()
+        question = self.question_entry.get("1.0", "end-1c").strip()
+        answer = self.answer_entry.get("1.0", "end-1c").strip()
         if not question or not answer:
             messagebox.showwarning("Warning", "Please fill in both question and answer")
             return
@@ -864,14 +859,13 @@ class AddCardDialog(BaseDialog):
             db = Database()
             db.create_card(self.deck_id, question, answer)
             # simply close the dialog; the calling page should update the cards list
-            self.cancel_dialog_event()
+            self.cancel_event()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to create card: {str(e)}")
 
 class EditDeckDialog(BaseDialog):
-    # intiialise edit deck dialog as subclass of basedialog (inheritance)
     def __init__(self, parent, deck_id):
-        # set dialog size
+        # set dialog size for editing a deck name
         super().__init__(title="Edit Deck", width=400, height=300)
         self.parent = parent
         self.deck_id = deck_id
@@ -881,10 +875,10 @@ class EditDeckDialog(BaseDialog):
         deck_info = db.get_deck_info(deck_id)
         current_deck_name = deck_info["name"]
 
-        # create title (defined in base dialog)
-        self.create_dialog_title("Edit Deck")
+        # create title label using base method
+        self.create_title("Edit Deck")
 
-        # create label for deck name
+        # create label for deck name (using a direct CTkLabel here as create_input_field only returns an entry)
         ctk.CTkLabel(
             self.container,
             text="Deck Name",
@@ -892,14 +886,13 @@ class EditDeckDialog(BaseDialog):
             text_color="black"
         ).pack(fill="x", pady=(10, 5))
 
-        # create input field, with current deck name in it (defined in base dialog)
-        self.deck_entry = self.create_dialog_input_field(initial_value=current_deck_name)
+        # create input field pre-populated with the current deck name using base dialog helper
+        self.deck_entry = self.create_input_field(initial_value=current_deck_name)
 
-        # create save button (defined in base dialog)
-        self.create_dialog_button("Save Deck", self.save_deck)
+        # create save button using base dialog helper
+        self.create_button("Save Changes", self.save_deck)
         self.wait_window()
 
-    # when save deck button clicked, call save_deck to update datebase with new deck info
     def save_deck(self):
         new_deck_name = self.deck_entry.get().strip()
         if not new_deck_name:
@@ -908,31 +901,29 @@ class EditDeckDialog(BaseDialog):
         try:
             db = Database()
             db.update_deck_name(self.deck_id, new_deck_name)
-            self.cancel_dialog_event()
+            # simply close the dialog; the calling page should update the deck list
+            self.cancel_event()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to update deck: {str(e)}")
 
 class AddDeckDialog(BaseDialog):
-    # initialise add deck dialog as subclass of basedialog (inheritance)
     def __init__(self, parent):
-        # set dialog size
+        # set dialog size for creating a new deck
         super().__init__(title="New Deck", width=400, height=300)
-        self.parent = parent 
-        self.create_dialog_title("New Deck")
+        self.parent = parent  # store reference to the parent (e.g., DecksPage)
+        self.create_title("New Deck")
         ctk.CTkLabel(
             self.container,
             text="Enter deck name",
             font=("Inter", 14, "bold"),
             text_color="black"
         ).pack(pady=(10, 5))
-        
-        # create input field (defined in basedialog)
-        self.deck_entry = self.create_dialog_input_field()
-        # create add button (defined in base dialog)
-        self.create_dialog_button("Save Deck", self.save_deck)
+        # create input field for deck name using base dialog helper
+        self.deck_entry = self.create_input_field()
+        # create add button using base dialog helper
+        self.create_button("Add Deck", self.save_deck)
         self.wait_window()
 
-    # when save deck button pressed, call save_deck to add the deck to database
     def save_deck(self):
         new_deck_name = self.deck_entry.get().strip()
         if not new_deck_name:
@@ -941,7 +932,8 @@ class AddDeckDialog(BaseDialog):
         try:
             db = Database()
             db.create_deck(self.parent.user_id, new_deck_name)
-            self.cancel_dialog_event()
+            # simply close the dialog; the calling page should update the deck list
+            self.cancel_event()
         except Exception as e:
             messagebox.showerror("Error", f"Failed to create deck: {str(e)}")
 

@@ -5,36 +5,47 @@ from sidebar import Sidebar
 
 # dialog is a small window that pops up on top of the main window
 class BaseDialog(ctk.CTkToplevel):
-    # initialises the base dialog  as a subclass of CTkFrame (inheritance)
-    # initialises base dialog with width and height    
-    def __init__(self, title="", width=int, height=int):
+    # initializes the base dialog as a subclass of CTkToplevel
+    # does not control width/height; that is handled by the subclass
+    # only handles central positioning, title, and common container setup
+    def __init__(self, title=""):
         super().__init__()
         self.title(title)
-        self.geometry(f"{width}x{height}")
-        self.resizable(False, False) # makes sure the user cant resize the dialog window
+        # do not set geometry here; let subclasses manage width and height
+        self.resizable(False, False)  # prevent user from resizing the dialog
         self.configure(fg_color="white")
+        
+        # setup container for dialog contents with padding and rounded corners
+        self.container = ctk.CTkFrame(self, fg_color="transparent", corner_radius=12)
+        self.container.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        # center the dialog on screen once it's idle (subclass should have set geometry)
+        self.after_idle(self.center_dialog)
+        
+        # handle window close event
+        self.protocol("WM_DELETE_WINDOW", self.cancel_event)
+        # lock focus onto the dialog, preventing clicking outside
+        self.grab_set()
 
-        # centers the dialog on screen with the width and height and the x,y position for top left corner of dialog
+    # centers the dialog on screen based on its current geometry
+    def center_dialog(self):
+        self.update_idletasks()  # ensure geometry info is up-to-date
+        width = self.winfo_width()
+        height = self.winfo_height()
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         x = (screen_width - width) // 2
         y = (screen_height - height) // 2
-        self.geometry(f"{width}x{height}+{x}+{y}")
+        self.geometry(f"+{x}+{y}")
 
-        self.container = ctk.CTkFrame(self, fg_color="transparent", corner_radius=12)
-        self.container.pack(fill="both", expand=True, padx=20, pady=20)
-
-        self.protocol("WM_DELETE_WINDOW", self.cancel_event) # cancel event called when X button on dialog window clicked
-        self.grab_set() # locks focus onto the dialog, preventing the user clicking on anything outside the dialog
-
-    # window title for dialog
-    def create_dialog_title(self, text):
+    # creates a title label for the dialog using common styling
+    def create_title(self, text):
         label = ctk.CTkLabel(self.container, text=text, font=("Helvetica", 20, "bold"), text_color="black")
         label.pack(pady=(20, 10))
         return label
 
-    # base styling for input fields
-    def create_dialog_input_field(self, initial_value=""):
+    # creates a single-line input field using common styling; returns the entry widget
+    def create_input_field(self, initial_value=""):
         entry = ctk.CTkEntry(
             self.container,
             width=300,
@@ -50,8 +61,8 @@ class BaseDialog(ctk.CTkToplevel):
         entry.pack(pady=10)
         return entry
 
-    # creates a button (to be used to execute dialog actions, e.g changing a deck name)
-    def create_dialog_button(self, text, command):
+    # creates a button with common styling for dialog actions; returns the button widget
+    def create_button(self, text, command):
         button = ctk.CTkButton(
             self.container,
             text=text,
@@ -66,9 +77,10 @@ class BaseDialog(ctk.CTkToplevel):
         button.pack(pady=20)
         return button
 
-    def cancel_dialog_event(self):
-        self.grab_release() # releases focus from the dialog, allowing the user to click on things outside the dialog
-        self.destroy() # destroys the dialog
+    # called when the dialog is closed (via the X button or programmatically)
+    def cancel_event(self):
+        self.grab_release()  # release focus from the dialog
+        self.destroy()       # destroy the dialog window
 
 
 class BasePage(ctk.CTkFrame):
