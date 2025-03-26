@@ -100,11 +100,11 @@ class DecksPage(BasePage):
         )
         self.delete_button.pack(side="left", padx=5)
 
-        # separator, seperates header from the decks frame below
+        # separator: seperates header from the decks frame below
         self.separator = ctk.CTkFrame(self.main_header_content, height=1, fg_color="#E5E7EB")
         self.separator.pack(fill="x", padx=30, pady=(20, 0))
 
-        # decks frame, scrollable area to display deck containers
+        # decks frame: scrollable area to display deck containers
         self.decks_frame = ctk.CTkScrollableFrame(
             self.main_header_content,
             fg_color="transparent",
@@ -439,7 +439,7 @@ class CardContainer(BaseContainer):
         # buttons container holds the edit and delete buttons
         buttons_frame = ctk.CTkFrame(self.card_container, fg_color="transparent")
         buttons_frame.pack(side="bottom", fill="x")
-        # aligns button_frame to be on the right of card container
+        # aligns buttons to the right of card container
         button_container = ctk.CTkFrame(buttons_frame, fg_color="transparent")
         button_container.pack(side="right", padx=5, pady=5)
 
@@ -534,8 +534,7 @@ class CardsPage(BasePage):
         self.filter_frame = ctk.CTkFrame(self.header_frame, fg_color="transparent")
         self.filter_frame.pack(side="right", padx=10)
 
-        # card_search_input stores the users search text
-        # card_search_entry_field makes the search box
+        # card search variable and entry widget
         self.card_search_input = ctk.StringVar()
         self.card_search_entry_field = ctk.CTkEntry(
             self.filter_frame,
@@ -582,6 +581,7 @@ class CardsPage(BasePage):
         )
         self.delete_cards_button.pack(side="right", padx=5)
 
+        # add card button --> opens the add card dialog
         self.add_card_button = ctk.CTkButton(
             self.header_frame,
             text="+ Add Card",
@@ -1057,13 +1057,10 @@ class AddCardDialog(BaseDialog):
         if not question or not answer:
             messagebox.showwarning("Warning", "Please fill in both question and answer")
             return
-        try:
-            db = Database()
-            db.create_card(self.deck_id, question, answer)
-            # simply close the dialog; the calling page should update the cards list
-            self.cancel_event()
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to create card: {str(e)}")
+        db = Database()
+        db.create_card(self.deck_id, question, answer)
+        # simply close the dialog; the calling page should update the cards list
+        self.cancel_event()
 
 class EditDeckDialog(BaseDialog):
     def __init__(self, parent, deck_id):
@@ -1143,13 +1140,12 @@ class AddDeckDialog(BaseDialog):
         if not new_deck_name:
             messagebox.showwarning("Warning", "Please enter a deck name")
             return
-        try:
-            db = Database()
-            db.create_deck(self.parent.user_id, new_deck_name)
-            # simply close the dialog; the calling page should update the deck list
-            self.cancel_event()
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to create deck: {str(e)}")
+        db = Database()
+        # create a new deck and retrieve its id (if needed)
+        deck_id = db.create_deck(self.parent.user_id, new_deck_name)
+        # simply close the dialog; the calling page should update the deck list
+        self.cancel_event()
+
 class QuizPage(BasePage):
     def __init__(self, master, user_id, switch_page):
         super().__init__(master, user_id, switch_page)
