@@ -149,7 +149,7 @@ class DecksPage(BasePage):
             filtered_deck_list = []
             # iterates through deck list
             for deck in deck_list:
-                # makes deck name lower case
+                # assigns deck name to be second element of each deck in deck list
                 deck_name = deck[1].lower()
                 # if any characters in the search query are in deck_name, 
                 # append that deck to filtered decks and make deck_list equal to filtered decks
@@ -163,17 +163,17 @@ class DecksPage(BasePage):
         # if a priority is selected (anything but "all")
         if priority_filter != "all":
             filtered_deck_list = []
-            # if high, then only append decks with avg_ef less than 2
+            # if high, then only show decks with avg_ef less than 2
             if priority_filter == "high":
                 for deck in deck_list:
                     if deck[2] < 2.0:
                         filtered_deck_list.append(deck)
-            # if medium, then only append decks with avg_ef between 2 and 2.5, including 2
+            # if medium, then only show decks with avg_ef less than 2.5 but more than 2
             elif priority_filter == "medium":
                 for deck in deck_list:
                     if 2.0 <= deck[2] < 2.5:
                         filtered_deck_list.append(deck)
-            # if low, then only show append with avg_ef more than or equal to 2.5
+            # if low, then only show decks with avg_ef more than or equal to 2.5
             elif priority_filter == "low":
                 for deck in deck_list:
                     if deck[2] >= 2.5:
@@ -181,7 +181,6 @@ class DecksPage(BasePage):
             # assigns deck_list to the now filtered deck list
             deck_list = filtered_deck_list
 
-        # if user has no decks, then display a message
         if not deck_list:
             no_decks_frame = ctk.CTkFrame(self.decks_frame, fg_color="transparent")
             no_decks_frame.pack(fill="both", expand=True)
@@ -198,7 +197,7 @@ class DecksPage(BasePage):
             root = insert_node(root, node)
         sorted_nodes = in_order(root)
 
-        # instantiate deck container for each deck to be displayed
+        # display decks in a 3-column grid
         row, col = 0, 0
         for node in sorted_nodes:
             deck_container = DeckContainer(
@@ -437,7 +436,7 @@ class CardContainer(BaseContainer):
         # buttons container holds the edit and delete buttons
         buttons_frame = ctk.CTkFrame(self.card_container, fg_color="transparent")
         buttons_frame.pack(side="bottom", fill="x")
-        # aligns buttons to the right of card container
+        # inner container to align buttons to the right
         button_container = ctk.CTkFrame(buttons_frame, fg_color="transparent")
         button_container.pack(side="right", padx=5, pady=5)
 
@@ -467,7 +466,7 @@ class CardContainer(BaseContainer):
             command=lambda: delete_callback(self.card_id)
         ).pack(side="left", padx=(2, 5))
 
-        # checkbox at top right
+        # multi-selection checkbox at top right: allows selecting multiple cards
         self.checkbox = ctk.CTkCheckBox(
             self,
             text="",
@@ -479,7 +478,20 @@ class CardContainer(BaseContainer):
         )
         self.checkbox.place(relx=1.0, rely=0.0, anchor="ne", x=-10, y=10)
 
-    # changes checkbox colour to purple on toggle
+    # toggles selection state when the card container is clicked (ignores direct checkbox clicks)
+    def toggle_selection(self, event=None):
+        if event.widget == self.checkbox:
+            return
+        self.selected = not self.selected
+        if self.selected:
+            self.checkbox.select()
+        else:
+            self.checkbox.deselect()
+        if self.selection_callback:
+            self.selection_callback(self.card_id, self.selected)
+        self.configure(fg_color="#F5F3FF" if self.selected else "white")
+
+    # changes checkbox appearance and card background based on selection state
     def on_checkbox_toggle(self):
         self.selected = self.checkbox.get()
         if self.selection_callback:
@@ -499,6 +511,7 @@ class CardContainer(BaseContainer):
                 hover_color="white"
             )
 
+
 class CardsPage(BasePage):
     def __init__(self, master, user_id, deck_id, switch_page):
         super().__init__(master, user_id, switch_page)
@@ -506,192 +519,94 @@ class CardsPage(BasePage):
         self.selected_cards = set()
         self.deck_info = self.db.get_deck_info(self.deck_id)
 
-        # header frame, a container for deck title, card count, search, and filter by priority option
-        self.header_frame = ctk.CTkFrame(self.main_header_content, fg_color="transparent")
-        self.header_frame.pack(fill="x", padx=30, pady=20)
+        header_frame = ctk.CTkFrame(self.main_header_content, fg_color="transparent")
+        header_frame.pack(fill="x", padx=30, pady=20)
+        ctk.CTkLabel(header_frame, text=self.deck_info["name"], font=("Inter", 24, "bold"), text_color="black").pack(side="left")
+        ctk.CTkLabel(header_frame, text=f"{self.deck_info['card_count']} cards", font=("Inter", 14), text_color="#6B7280").pack(side="left", padx=(10,0))
 
-        # page title (the deck name)
-        self.deck_title_label = ctk.CTkLabel(
-            self.header_frame,
-            text=self.deck_info["name"],
-            font=("Inter", 24, "bold"),
-            text_color="black"
-        )
-        self.deck_title_label.pack(side="left")
-
-        # card count label shows number of cards in the deck
-        self.card_count_label = ctk.CTkLabel(
-            self.header_frame,
-            text=f"{self.deck_info['card_count']} cards",
-            font=("Inter", 14),
-            text_color="#6B7280"
-        )
-        self.card_count_label.pack(side="left", padx=(10, 0))
-
-        # filter frame holds the search entry and priority dropdown
-        self.filter_frame = ctk.CTkFrame(self.header_frame, fg_color="transparent")
-        self.filter_frame.pack(side="right", padx=10)
-
-        # card search variable and entry widget
-        self.card_search_input = ctk.StringVar()
-        self.card_search_entry_field = ctk.CTkEntry(
-            self.filter_frame,
-            textvariable=self.card_search_input,
-            placeholder_text="Search card",
-            placeholder_text_color="#D1D1D1",
-            text_color="#000000",
-            fg_color="white",
-            border_color="#e5e7eb",
-            width=200
-        )
-        self.card_search_entry_field.pack(side="left", padx=5)
-
-        # card priority filter and dropdown menu (default selected valu eis All)
-        self.card_priority_filter_selection = ctk.StringVar(value="All")
-        self.card_priority_filter_menu = ctk.CTkOptionMenu(
-            self.filter_frame,
-            values=["All", "High", "Medium", "Low"],
-            variable=self.card_priority_filter_selection,
-            width=120,
-            fg_color="white",
-            button_color="#F3F4F6",
-            button_hover_color="#E5E7EB",
-            text_color="#111827"
-        )
+        filter_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
+        filter_frame.pack(side="right", padx=10)
+        self.card_search_var = ctk.StringVar()
+        self.card_search_entry = ctk.CTkEntry(filter_frame, textvariable=self.card_search_var,
+                                              placeholder_text="Search card", placeholder_text_color="#D1D1D1",
+                                              text_color="#000000", fg_color="white", border_color="#e5e7eb", width=200)
+        self.card_search_entry.pack(side="left", padx=5)
+        self.card_priority_filter_var = ctk.StringVar(value="All")
+        self.card_priority_filter_menu = ctk.CTkOptionMenu(filter_frame,
+                                                          values=["All", "High", "Medium", "Low"],
+                                                          variable=self.card_priority_filter_var,
+                                                          width=120, fg_color="white",
+                                                          button_color="#F3F4F6",
+                                                          button_hover_color="#E5E7EB",
+                                                          text_color="#111827")
         self.card_priority_filter_menu.pack(side="left", padx=5)
+        self.card_search_var.trace_add("write", lambda *args: self.display_cards())
+        self.card_priority_filter_var.trace_add("write", lambda *args: self.display_cards())
 
-        # trace_add listens for changes in search and filter and calls update_card_list accordingly
-        self.card_search_input.trace_add("write", lambda *args: self.update_card_list())
-        self.card_priority_filter_selection.trace_add("write", lambda *args: self.update_card_list())
-
-        # delete selected cards button, which is initially disabled (only enabled if checkbox(es) clicked)
-        self.delete_cards_button = ctk.CTkButton(
-            self.header_frame,
-            text="Delete Selected",
-            width=120,
-            height=32,
-            corner_radius=16,
-            fg_color="#FEE2E2",
-            text_color="#DC2626",
-            hover_color="#FECACA",
-            state="disabled",
-            command=self.delete_selected_cards
-        )
+        self.delete_cards_button = ctk.CTkButton(header_frame, text="Delete Selected", width=120, height=32,
+                                                 corner_radius=16, fg_color="#FEE2E2", text_color="#DC2626",
+                                                 hover_color="#FECACA", state="disabled", command=self.delete_selected_cards)
         self.delete_cards_button.pack(side="right", padx=5)
+        ctk.CTkButton(header_frame, text="+ Add Card", width=70, height=32, corner_radius=16,
+                      fg_color="#F3F4F6", text_color="black", hover_color="#E5E7EB",
+                      command=self.add_card).pack(side="right", padx=5)
 
-        # add card button --> opens the add card dialog
-        self.add_card_button = ctk.CTkButton(
-            self.header_frame,
-            text="+ Add Card",
-            width=70,
-            height=32,
-            corner_radius=16,
-            fg_color="#F3F4F6",
-            text_color="black",
-            hover_color="#E5E7EB",
-            command=self.add_card
-        )
-        self.add_card_button.pack(side="right", padx=5)
-
-        # cards frame --> scrollable container for displaying card containers
-        self.cards_frame = ctk.CTkScrollableFrame(
-            self.main_header_content,
-            fg_color="transparent",
-            scrollbar_button_color="#E5E7EB",
-            scrollbar_button_hover_color="#D1D5DB"
-        )
+        self.cards_frame = ctk.CTkScrollableFrame(self.main_header_content, fg_color="transparent",
+                                                   scrollbar_button_color="#E5E7EB",
+                                                   scrollbar_button_hover_color="#D1D5DB")
         self.cards_frame.pack(fill="both", expand=True, padx=30, pady=20)
+        self.display_cards()
 
-        # display cards initially
-        self.update_card_list()
-
-    # displays the cards in the scrollable cards frame
-    def update_card_list(self):
-        # clear existing card widgets from the scrollable frame
+    def display_cards(self):
         for widget in self.cards_frame.winfo_children():
             widget.destroy()
 
-        db = Database()
-        card_list = []
-        cards = db.get_cards(self.deck_id)
-        
-        # builds card_list as tuples with following --> (card_id, question, answer, ef)
-        # _ is deck_id which is ignoredS
-        for card in cards:
+        raw_cards = self.db.get_cards(self.deck_id)
+        cards = []
+        for card in raw_cards:
             card_id, _, question, answer = card
-            ef = db.get_card_easiness(self.user_id, card_id)
-            card_list.append((card_id, question, answer, ef))
+            ef = self.db.get_card_easiness(self.user_id, card_id)
+            cards.append((card_id, question, answer, ef))
 
-        # gets the user input from the search field, makes it lowercase and strips whitespace
-        search_query = self.card_search_input.get().lower().strip()
+        # First filter by search and priority
+        search_query = self.card_search_var.get().lower().strip()
         if search_query:
-            filtered_card_list = []
-            for card in card_list:
-                # if any characters in the search query are in card[1] (which is the question), 
-                # append that card to filtered card list and make card_list equal to filtered card list
-                if search_query in card[1].lower():
-                    filtered_card_list.append(card)
-            card_list = filtered_card_list
-
-        # filter card_list by priority (using easiness factor)
-        priority_filter = self.card_priority_filter_selection.get().lower()
-        # if a priority is selected (anything but "all")
+            cards = [c for c in cards if search_query in c[1].lower()]
+        priority_filter = self.card_priority_filter_var.get().lower()
         if priority_filter != "all":
-            filtered_card_list = []
-            # if high, then append cards with ef less than 2
             if priority_filter == "high":
-                for card in card_list:
-                    if card[3] < 2.0:
-                        filtered_card_list.append(card)
-            # if high, then append cards with ef between 2 and 2.5, including 2
+                cards = [c for c in cards if c[3] < 2.0]
             elif priority_filter == "medium":
-                for card in card_list:
-                    if 2.0 <= card[3] < 2.5:
-                        filtered_card_list.append(card)
-            # if low, then append cards with ef less than or equal to 2.5
+                cards = [c for c in cards if 2.0 <= c[3] < 2.5]
             elif priority_filter == "low":
-                for card in card_list:
-                    if card[3] >= 2.5:
-                        filtered_card_list.append(card)
-            card_list = filtered_card_list
+                cards = [c for c in cards if c[3] >= 2.5]
 
-        # if user has no cards, display a message
-        if not card_list:
+        if not cards:
             no_cards_frame = ctk.CTkFrame(self.cards_frame, fg_color="transparent")
             no_cards_frame.pack(fill="both", expand=True)
-            ctk.CTkLabel(
-                no_cards_frame,
-                text="No cards found",
-                font=("Inter", 16, "bold"),
-                text_color="#4B5563"
-            ).pack(expand=True, pady=50)
+            ctk.CTkLabel(no_cards_frame, text="No cards found", font=("Inter", 16, "bold"),
+                         text_color="#4B5563").pack(expand=True, pady=50)
             return
 
-        # sort card_list using merge sort based on easiness factor (lower ef means higher priority)
-        # sorts from lowest to highest ef (so highest to lowest priority)
+        # Sort cards using merge sort based on EF (lower EF means higher priority)
         from misc import MiscFunctions
-        sorted_cards = MiscFunctions.split(card_list)
-
-        # instantiate card container for each card to be displayed
+        sorted_cards = MiscFunctions.split(cards)
         for card in sorted_cards:
-            card_container = CardContainer(
-                self.cards_frame,
-                card_id=card[0],
-                question=card[1],
-                answer=card[2],
-                edit_callback=self.edit_card,
-                delete_callback=self.delete_card,
-                ef=card[3],
-                selection_callback=self.toggle_card_selection
-            )
+            card_container = CardContainer(self.cards_frame,
+                                           card_id=card[0],
+                                           question=card[1],
+                                           answer=card[2],
+                                           edit_callback=self.edit_card,
+                                           delete_callback=self.delete_card,
+                                           ef=card[3],
+                                           user_id=self.user_id,
+                                           selection_callback=self.toggle_card_selection)
             card_container.pack(fill="x", pady=10)
 
-    # opens the add card dialog for the current deck
     def add_card(self):
         dialog = AddCardDialog(self, deck_id=self.deck_id)
         dialog.grab_set()
 
-    # opens the edit card dialog for the given card id
     def edit_card(self, card_id):
         try:
             card_info = self.db.get_card(card_id)
@@ -699,13 +614,11 @@ class CardsPage(BasePage):
         except Exception as e:
             messagebox.showerror("Error", f"Failed to edit card: {str(e)}")
 
-    # deletes a single card after confirmation
     def delete_card(self, card_id):
         if messagebox.askyesno("Delete Card", "Are you sure you want to delete this card?"):
             self.db.delete_card(card_id)
-            self.update_card_list()
+            self.display_cards()
 
-    # toggles the selection state of a card and updates the delete button state
     def toggle_card_selection(self, card_id, selected):
         if selected:
             self.selected_cards.add(card_id)
@@ -713,7 +626,6 @@ class CardsPage(BasePage):
             self.selected_cards.discard(card_id)
         self.delete_cards_button.configure(state="normal" if self.selected_cards else "disabled")
 
-    # deletes all selected cards after user confirmation
     def delete_selected_cards(self):
         if not self.selected_cards:
             return
@@ -721,7 +633,7 @@ class CardsPage(BasePage):
             for card_id in self.selected_cards:
                 self.db.delete_card(card_id)
             self.selected_cards.clear()
-            self.update_card_list()
+            self.display_cards()
             self.delete_cards_button.configure(state="disabled")
 
 class EditCardDialog(BaseDialog):
@@ -784,8 +696,8 @@ class EditCardDialog(BaseDialog):
         try:
             db = Database()
             db.update_card(self.card_id, new_question, new_answer)
-            if hasattr(self.parent, 'update_card_list'):
-                self.parent.update_card_list()
+            if hasattr(self.parent, 'display_cards'):
+                self.parent.display_cards()
             self.cancel_event()  # releases grab and closes
         except Exception as e:
             messagebox.showerror("Error", f"Failed to update card: {str(e)}")
@@ -906,8 +818,8 @@ class AddCardDialog(BaseDialog):
             return
         db = Database()
         db.create_card(self.deck_id, question, answer)
-        if hasattr(self.parent, 'update_card_list'):
-            self.parent.update_card_list()
+        if hasattr(self.parent, 'display_cards'):
+            self.parent.display_cards()
         self.cancel_event()
 
 class AddDeckDialog(BaseDialog):

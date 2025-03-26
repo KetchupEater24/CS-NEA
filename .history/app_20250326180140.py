@@ -149,7 +149,7 @@ class DecksPage(BasePage):
             filtered_deck_list = []
             # iterates through deck list
             for deck in deck_list:
-                # makes deck name lower case
+                # assigns deck name to be second element of each deck in deck list
                 deck_name = deck[1].lower()
                 # if any characters in the search query are in deck_name, 
                 # append that deck to filtered decks and make deck_list equal to filtered decks
@@ -163,17 +163,17 @@ class DecksPage(BasePage):
         # if a priority is selected (anything but "all")
         if priority_filter != "all":
             filtered_deck_list = []
-            # if high, then only append decks with avg_ef less than 2
+            # if high, then only show decks with avg_ef less than 2
             if priority_filter == "high":
                 for deck in deck_list:
                     if deck[2] < 2.0:
                         filtered_deck_list.append(deck)
-            # if medium, then only append decks with avg_ef between 2 and 2.5, including 2
+            # if medium, then only show decks with avg_ef less than 2.5 but more than 2
             elif priority_filter == "medium":
                 for deck in deck_list:
                     if 2.0 <= deck[2] < 2.5:
                         filtered_deck_list.append(deck)
-            # if low, then only show append with avg_ef more than or equal to 2.5
+            # if low, then only show decks with avg_ef more than or equal to 2.5
             elif priority_filter == "low":
                 for deck in deck_list:
                     if deck[2] >= 2.5:
@@ -181,7 +181,6 @@ class DecksPage(BasePage):
             # assigns deck_list to the now filtered deck list
             deck_list = filtered_deck_list
 
-        # if user has no decks, then display a message
         if not deck_list:
             no_decks_frame = ctk.CTkFrame(self.decks_frame, fg_color="transparent")
             no_decks_frame.pack(fill="both", expand=True)
@@ -198,7 +197,7 @@ class DecksPage(BasePage):
             root = insert_node(root, node)
         sorted_nodes = in_order(root)
 
-        # instantiate deck container for each deck to be displayed
+        # display decks in a 3-column grid
         row, col = 0, 0
         for node in sorted_nodes:
             deck_container = DeckContainer(
@@ -606,56 +605,49 @@ class CardsPage(BasePage):
         self.update_card_list()
 
     # displays the cards in the scrollable cards frame
-    def update_card_list(self):
+    def update_cards_list(self):
         # clear existing card widgets from the scrollable frame
         for widget in self.cards_frame.winfo_children():
             widget.destroy()
 
-        db = Database()
+        db = self.db
+        # build card_list as tuples: (card_id, question, answer, ef)
         card_list = []
-        cards = db.get_cards(self.deck_id)
-        
-        # builds card_list as tuples with following --> (card_id, question, answer, ef)
-        # _ is deck_id which is ignoredS
-        for card in cards:
+        cards_data = db.get_cards(self.deck_id)
+        for card in cards_data:
             card_id, _, question, answer = card
             ef = db.get_card_easiness(self.user_id, card_id)
             card_list.append((card_id, question, answer, ef))
 
-        # gets the user input from the search field, makes it lowercase and strips whitespace
+        # filter card_list by search query
         search_query = self.card_search_input.get().lower().strip()
         if search_query:
             filtered_card_list = []
             for card in card_list:
-                # if any characters in the search query are in card[1] (which is the question), 
-                # append that card to filtered card list and make card_list equal to filtered card list
+                # card[1] holds the question text, converted to lowercase for comparison
                 if search_query in card[1].lower():
                     filtered_card_list.append(card)
             card_list = filtered_card_list
 
         # filter card_list by priority (using easiness factor)
         priority_filter = self.card_priority_filter_selection.get().lower()
-        # if a priority is selected (anything but "all")
         if priority_filter != "all":
             filtered_card_list = []
-            # if high, then append cards with ef less than 2
             if priority_filter == "high":
                 for card in card_list:
                     if card[3] < 2.0:
                         filtered_card_list.append(card)
-            # if high, then append cards with ef between 2 and 2.5, including 2
             elif priority_filter == "medium":
                 for card in card_list:
                     if 2.0 <= card[3] < 2.5:
                         filtered_card_list.append(card)
-            # if low, then append cards with ef less than or equal to 2.5
             elif priority_filter == "low":
                 for card in card_list:
                     if card[3] >= 2.5:
                         filtered_card_list.append(card)
             card_list = filtered_card_list
 
-        # if user has no cards, display a message
+        # if no cards match the filters, display a "No cards found" message
         if not card_list:
             no_cards_frame = ctk.CTkFrame(self.cards_frame, fg_color="transparent")
             no_cards_frame.pack(fill="both", expand=True)
@@ -668,11 +660,10 @@ class CardsPage(BasePage):
             return
 
         # sort card_list using merge sort based on easiness factor (lower ef means higher priority)
-        # sorts from lowest to highest ef (so highest to lowest priority)
         from misc import MiscFunctions
         sorted_cards = MiscFunctions.split(card_list)
 
-        # instantiate card container for each card to be displayed
+        # create and pack a card container for each sorted card
         for card in sorted_cards:
             card_container = CardContainer(
                 self.cards_frame,

@@ -149,7 +149,7 @@ class DecksPage(BasePage):
             filtered_deck_list = []
             # iterates through deck list
             for deck in deck_list:
-                # makes deck name lower case
+                # assigns deck name to be second element of each deck in deck list
                 deck_name = deck[1].lower()
                 # if any characters in the search query are in deck_name, 
                 # append that deck to filtered decks and make deck_list equal to filtered decks
@@ -163,17 +163,17 @@ class DecksPage(BasePage):
         # if a priority is selected (anything but "all")
         if priority_filter != "all":
             filtered_deck_list = []
-            # if high, then only append decks with avg_ef less than 2
+            # if high, then only show decks with avg_ef less than 2
             if priority_filter == "high":
                 for deck in deck_list:
                     if deck[2] < 2.0:
                         filtered_deck_list.append(deck)
-            # if medium, then only append decks with avg_ef between 2 and 2.5, including 2
+            # if medium, then only show decks with avg_ef less than 2.5 but more than 2
             elif priority_filter == "medium":
                 for deck in deck_list:
                     if 2.0 <= deck[2] < 2.5:
                         filtered_deck_list.append(deck)
-            # if low, then only show append with avg_ef more than or equal to 2.5
+            # if low, then only show decks with avg_ef more than or equal to 2.5
             elif priority_filter == "low":
                 for deck in deck_list:
                     if deck[2] >= 2.5:
@@ -181,7 +181,6 @@ class DecksPage(BasePage):
             # assigns deck_list to the now filtered deck list
             deck_list = filtered_deck_list
 
-        # if user has no decks, then display a message
         if not deck_list:
             no_decks_frame = ctk.CTkFrame(self.decks_frame, fg_color="transparent")
             no_decks_frame.pack(fill="both", expand=True)
@@ -198,7 +197,7 @@ class DecksPage(BasePage):
             root = insert_node(root, node)
         sorted_nodes = in_order(root)
 
-        # instantiate deck container for each deck to be displayed
+        # display decks in a 3-column grid
         row, col = 0, 0
         for node in sorted_nodes:
             deck_container = DeckContainer(
@@ -560,9 +559,9 @@ class CardsPage(BasePage):
         )
         self.card_priority_filter_menu.pack(side="left", padx=5)
 
-        # trace_add listens for changes in search and filter and calls update_card_list accordingly
-        self.card_search_input.trace_add("write", lambda *args: self.update_card_list())
-        self.card_priority_filter_selection.trace_add("write", lambda *args: self.update_card_list())
+        # trace_add listens for changes in search and filter and calls update_cards_list accordingly
+        self.card_search_input.trace_add("write", lambda *args: self.update_cards_list())
+        self.card_priority_filter_selection.trace_add("write", lambda *args: self.update_cards_list())
 
         # delete selected cards button, which is initially disabled (only enabled if checkbox(es) clicked)
         self.delete_cards_button = ctk.CTkButton(
@@ -603,88 +602,101 @@ class CardsPage(BasePage):
         self.cards_frame.pack(fill="both", expand=True, padx=30, pady=20)
 
         # display cards initially
-        self.update_card_list()
+        self.update_cards_list()
 
-    # displays the cards in the scrollable cards frame
-    def update_card_list(self):
-        # clear existing card widgets from the scrollable frame
-        for widget in self.cards_frame.winfo_children():
+    def update_deck_list(self):
+        # clear current deck containers
+        for widget in self.decks_frame.winfo_children():
             widget.destroy()
 
         db = Database()
-        card_list = []
-        cards = db.get_cards(self.deck_id)
-        
-        # builds card_list as tuples with following --> (card_id, question, answer, ef)
-        # _ is deck_id which is ignoredS
-        for card in cards:
-            card_id, _, question, answer = card
-            ef = db.get_card_easiness(self.user_id, card_id)
-            card_list.append((card_id, question, answer, ef))
+        deck_list = []
+        decks = db.get_decks(self.user_id)
 
-        # gets the user input from the search field, makes it lowercase and strips whitespace
-        search_query = self.card_search_input.get().lower().strip()
+        # build deck_list as tuples: (deck_id, deck_name, avg_ef, card_count)
+        for deck in decks:
+            deck_id = deck[0]
+            deck_name = deck[1]
+            # get cards for the current deck from the database
+            cards = db.get_cards(deck_id)
+            if cards:
+                # calculate avg_ef by summing the easiness factors for all cards and dividing by the number of cards
+                total_ef = sum(db.get_card_easiness(self.user_id, c[0]) for c in cards)
+                avg_ef = total_ef / len(cards)
+            else:
+                # default average ef if no cards exist
+                avg_ef = 2.5
+            # retrieve number of cards in the deck
+            card_count = db.get_card_count(deck_id)
+            deck_list.append((deck_id, deck_name, avg_ef, card_count))
+
+        # filter deck_list by search query
+        search_query = self.deck_search_input.get().lower().strip()
         if search_query:
-            filtered_card_list = []
-            for card in card_list:
-                # if any characters in the search query are in card[1] (which is the question), 
-                # append that card to filtered card list and make card_list equal to filtered card list
-                if search_query in card[1].lower():
-                    filtered_card_list.append(card)
-            card_list = filtered_card_list
+            filtered_deck_list = []
+            for deck in deck_list:
+                deck_name_lower = deck[1].lower()
+                if search_query in deck_name_lower:
+                    filtered_deck_list.append(deck)
+            deck_list = filtered_deck_list
 
-        # filter card_list by priority (using easiness factor)
-        priority_filter = self.card_priority_filter_selection.get().lower()
-        # if a priority is selected (anything but "all")
+        # filter deck_list by priority (using avg_ef)
+        priority_filter = self.deck_priority_filter_selection.get().lower()
         if priority_filter != "all":
-            filtered_card_list = []
-            # if high, then append cards with ef less than 2
+            filtered_deck_list = []
             if priority_filter == "high":
-                for card in card_list:
-                    if card[3] < 2.0:
-                        filtered_card_list.append(card)
-            # if high, then append cards with ef between 2 and 2.5, including 2
+                for deck in deck_list:
+                    if deck[2] < 2.0:
+                        filtered_deck_list.append(deck)
             elif priority_filter == "medium":
-                for card in card_list:
-                    if 2.0 <= card[3] < 2.5:
-                        filtered_card_list.append(card)
-            # if low, then append cards with ef less than or equal to 2.5
+                for deck in deck_list:
+                    if 2.0 <= deck[2] < 2.5:
+                        filtered_deck_list.append(deck)
             elif priority_filter == "low":
-                for card in card_list:
-                    if card[3] >= 2.5:
-                        filtered_card_list.append(card)
-            card_list = filtered_card_list
+                for deck in deck_list:
+                    if deck[2] >= 2.5:
+                        filtered_deck_list.append(deck)
+            deck_list = filtered_deck_list
 
-        # if user has no cards, display a message
-        if not card_list:
-            no_cards_frame = ctk.CTkFrame(self.cards_frame, fg_color="transparent")
-            no_cards_frame.pack(fill="both", expand=True)
+        # if no decks match, display a message
+        if not deck_list:
+            no_decks_frame = ctk.CTkFrame(self.decks_frame, fg_color="transparent")
+            no_decks_frame.pack(fill="both", expand=True)
             ctk.CTkLabel(
-                no_cards_frame,
-                text="No cards found",
+                no_decks_frame,
+                text="No decks found",
                 font=("Inter", 16, "bold"),
                 text_color="#4B5563"
             ).pack(expand=True, pady=50)
             return
 
-        # sort card_list using merge sort based on easiness factor (lower ef means higher priority)
-        # sorts from lowest to highest ef (so highest to lowest priority)
-        from misc import MiscFunctions
-        sorted_cards = MiscFunctions.split(card_list)
+        # sort decks using a binary search tree (BST) based on avg_ef
+        from graph import DeckNode, insert_node, in_order
+        root = None
+        for deck in deck_list:
+            node = DeckNode(deck_id=deck[0], deck_name=deck[1], avg_ef=deck[2], card_count=deck[3])
+            root = insert_node(root, node)
+        sorted_deck_list = in_order(root)
 
-        # instantiate card container for each card to be displayed
-        for card in sorted_cards:
-            card_container = CardContainer(
-                self.cards_frame,
-                card_id=card[0],
-                question=card[1],
-                answer=card[2],
-                edit_callback=self.edit_card,
-                delete_callback=self.delete_card,
-                ef=card[3],
-                selection_callback=self.toggle_card_selection
+        # display decks in a 3-column grid
+        row, col = 0, 0
+        for node in sorted_deck_list:
+            deck_container = DeckContainer(
+                self.decks_frame,
+                deck_id=node.deck_id,
+                deck_name=node.deck_name,
+                card_count=node.card_count,
+                selection_callback=self.toggle_deck_selection,
+                avg_ef=node.avg_ef,
+                edit_callback=self.edit_deck,
+                delete_callback=self.delete_deck
             )
-            card_container.pack(fill="x", pady=10)
+            deck_container.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+            col += 1
+            if col == 3:
+                col = 0
+                row += 1
+
 
     # opens the add card dialog for the current deck
     def add_card(self):
@@ -703,7 +715,7 @@ class CardsPage(BasePage):
     def delete_card(self, card_id):
         if messagebox.askyesno("Delete Card", "Are you sure you want to delete this card?"):
             self.db.delete_card(card_id)
-            self.update_card_list()
+            self.update_cards_list()
 
     # toggles the selection state of a card and updates the delete button state
     def toggle_card_selection(self, card_id, selected):
@@ -721,7 +733,7 @@ class CardsPage(BasePage):
             for card_id in self.selected_cards:
                 self.db.delete_card(card_id)
             self.selected_cards.clear()
-            self.update_card_list()
+            self.update_cards_list()
             self.delete_cards_button.configure(state="disabled")
 
 class EditCardDialog(BaseDialog):
@@ -784,8 +796,8 @@ class EditCardDialog(BaseDialog):
         try:
             db = Database()
             db.update_card(self.card_id, new_question, new_answer)
-            if hasattr(self.parent, 'update_card_list'):
-                self.parent.update_card_list()
+            if hasattr(self.parent, 'update_cards_list'):
+                self.parent.update_cards_list()
             self.cancel_event()  # releases grab and closes
         except Exception as e:
             messagebox.showerror("Error", f"Failed to update card: {str(e)}")
@@ -906,8 +918,8 @@ class AddCardDialog(BaseDialog):
             return
         db = Database()
         db.create_card(self.deck_id, question, answer)
-        if hasattr(self.parent, 'update_card_list'):
-            self.parent.update_card_list()
+        if hasattr(self.parent, 'update_cards_list'):
+            self.parent.update_cards_list()
         self.cancel_event()
 
 class AddDeckDialog(BaseDialog):
