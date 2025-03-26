@@ -128,7 +128,7 @@ class LoginPage(ctk.CTkFrame):
             # if user_id isn't returned (user does not exist in database), then an error message is shown
 
             if user_id:
-                self.master.switch_page(DecksPage, user_id=user_id, switch_page=self.master.switch_page)
+                self.master.switch_page(DecksPage, user_id=user_id, switch_page=self.master.switch_page, db=self.db)
             else:
                 messagebox.showerror("Login Failed", "Invalid username or password. Please try again.")
         # if there is any other error during login, the Exception statement catches it and shows the error

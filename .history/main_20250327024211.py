@@ -15,6 +15,7 @@ class Application(ctk.CTk):
         self.current_page = None
         # create database instance to be used throughout the program
         self.db = Database()
+
         # switches page to login page when application is run
         self.switch_page(LoginPage)
 

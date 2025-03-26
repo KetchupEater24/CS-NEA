@@ -1958,7 +1958,8 @@ class AnalyticsPage(BasePage):
             command=lambda: self.switch_page(
                 __import__('app').DecksPage,
                 user_id=self.user_id,
-                switch_page=self.switch_page
+                switch_page=self.switch_page,
+                db=self.db
             )
         ).pack(anchor="center", pady=20)
 
@@ -2146,7 +2147,7 @@ class SettingsPage(BasePage):
             if deleted:
                 messagebox.showinfo("Account Deleted", "Your account has been deleted.")
                 from login import LoginPage
-                self.switch_page(LoginPage)
+                self.switch_page(LoginPage, db=self.db)
             else:
                 messagebox.showerror("Deletion Failed", "Failed to delete your account. Please try again later.")
         except Exception as e:

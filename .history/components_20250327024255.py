@@ -74,16 +74,15 @@ class BaseDialog(ctk.CTkToplevel):
 
 class BasePage(ctk.CTkFrame):
     # initialises basepage with master, user id and switch page, which is a subclass inheriting from CTkFrame
-    def __init__(self, master, user_id, switch_page, db):
+    def __init__(self, master, user_id, switch_page):
         super().__init__(master, corner_radius=0, fg_color="white")
         self.pack(fill="both", expand=True)
 
         self.user_id = user_id
         self.switch_page = switch_page
-        self.db = db
-        
+            
         # create and pack the sidebar on the screen
-        self.sidebar = Sidebar(self, switch_page, self.user_id, db=db)
+        self.sidebar = Sidebar(self, switch_page, self.user_id)
         self.sidebar.pack(side="left", fill="y")
 
         self.main_header_content = ctk.CTkFrame(self, fg_color="white")
@@ -92,6 +91,5 @@ class BasePage(ctk.CTkFrame):
 class BaseContainer(ctk.CTkFrame):
     # initialises the base container as a subclass of CTkFrame (inheritance)
     # initialises base container with corner radius, border width, border colour, foreground colour
-    def __init__(self, master, db, corner_radius=12, border_width=1, border_color="#E5E7EB", fg_color="white"):
-        super().__init__(master, corner_radius=corner_radius, border_width=border_width, border_color=border_color, fg_color=fg_color)
-        self.db = db
+    def __init__(self, master,corner_radius=12,border_width=1,border_color="#E5E7EB",fg_color="white"):
+        super().__init__(master,corner_radius=corner_radius,border_width=border_width,border_color=border_color,fg_color=fg_color)

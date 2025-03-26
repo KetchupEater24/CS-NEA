@@ -188,7 +188,6 @@ class DecksPage(BasePage):
 
         # sort decks using BST (binary search tree) (based on avg_ef)
         # how this works is explained in graph.py
-        from graph import DeckNode, insert_node, in_order
         root = None
         for deck in deck_list:
             node = DeckNode(deck_id=deck[0], deck_name=deck[1], avg_ef=deck[2], card_count=deck[3])
@@ -1340,7 +1339,7 @@ class QuizSession(ctk.CTkFrame):
         ctk.CTkButton(
             summary_frame, text="Return to Quiz", width=200, height=40, corner_radius=16,
             fg_color="#F3F4F6", text_color="black", hover_color="#E5E7EB",
-            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
+            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)
         ).pack(pady=20)
 
     def show_no_cards_message(self):
@@ -1351,7 +1350,7 @@ class QuizSession(ctk.CTkFrame):
         ctk.CTkLabel(msg_frame, text="No cards available for review!", font=("Inter", 18, "bold"), text_color="black").pack(expand=True)
         ctk.CTkButton(
             msg_frame, text="Return to Quiz", width=200, height=40, corner_radius=16,
-            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
+            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)
         ).pack(pady=20)
 
 matplotlib.use("Agg")  # For use with Tkinter
@@ -1958,7 +1957,8 @@ class AnalyticsPage(BasePage):
             command=lambda: self.switch_page(
                 __import__('app').DecksPage,
                 user_id=self.user_id,
-                switch_page=self.switch_page
+                switch_page=self.switch_page,
+                db=self.db
             )
         ).pack(anchor="center", pady=20)
 
@@ -2146,7 +2146,7 @@ class SettingsPage(BasePage):
             if deleted:
                 messagebox.showinfo("Account Deleted", "Your account has been deleted.")
                 from login import LoginPage
-                self.switch_page(LoginPage)
+                self.switch_page(LoginPage, db=self.db)
             else:
                 messagebox.showerror("Deletion Failed", "Failed to delete your account. Please try again later.")
         except Exception as e:

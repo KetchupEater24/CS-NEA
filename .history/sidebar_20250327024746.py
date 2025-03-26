@@ -36,7 +36,7 @@ class Sidebar(ctk.CTkFrame):
             username = user_info["username"]
         else:
             username = "User"
-        # Removed db.close() so that the shared connection remains open
+        db.close()
         self.create_bottom_section(username)
 
     def create_buttons(self, parent, show_decks):
@@ -129,20 +129,22 @@ class Sidebar(ctk.CTkFrame):
         for widget in self.deck_container.winfo_children():
             widget.destroy()
 
-        # Use the shared database instance instead of creating a new one
-        decks = self.db.get_decks(self.user_id)
+        db = Database()
+
+        # gets all the decks the user has form database
+        decks = db.get_decks(self.user_id)
 
         if decks:
             deck_list = []
             for deck_id, deck_name in decks:
                 # retrieves cards for each deck
-                cards = self.db.get_cards(deck_id)
+                cards = db.get_cards(deck_id)
                 if cards:
                     total_ef = 0
                     # calculates average ef by getting each card's easiness from database,
                     # adding them together (total_ef) and dividing by number of cards (len(cards))
                     for card in cards:
-                        total_ef += self.db.get_card_easiness(self.user_id, card[0])
+                        total_ef += db.get_card_easiness(self.user_id, card[0])
                     avg_ef = total_ef / len(cards)
                 else:
                     # if card doesn't have ef, uses 2.5 as default value
@@ -198,3 +200,4 @@ class Sidebar(ctk.CTkFrame):
             self.current_user = None  # Clear the stored user info
             from login import LoginPage
             self.switch_page(LoginPage)
+

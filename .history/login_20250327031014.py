@@ -106,7 +106,7 @@ class LoginPage(ctk.CTkFrame):
         # e is passed into the lambda function so the tkinter knows which button was pressed
         # then the lambda function runs the code on the right side of the colon
         from signup import SignupPage
-        signup_link.bind("<Button-1>", lambda e: self.master.switch_page(SignupPage))
+        signup_link.bind("<Button-1>", lambda e: self.master.switch_page(SignupPage, db=self.db))
 
         # above is all the styling code, such as logo image, title, entry fields, buttons and links
 
@@ -128,7 +128,7 @@ class LoginPage(ctk.CTkFrame):
             # if user_id isn't returned (user does not exist in database), then an error message is shown
 
             if user_id:
-                self.master.switch_page(DecksPage, user_id=user_id, switch_page=self.master.switch_page)
+                self.master.switch_page(DecksPage, user_id=user_id, switch_page=self.master.switch_page, db=self.db)
             else:
                 messagebox.showerror("Login Failed", "Invalid username or password. Please try again.")
         # if there is any other error during login, the Exception statement catches it and shows the error

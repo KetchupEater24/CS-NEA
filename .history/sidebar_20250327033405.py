@@ -47,16 +47,16 @@ class Sidebar(ctk.CTkFrame):
         nav_items = [
             # decks page nav button
             ("My decks", "images/decks_icon.png",
-             lambda: self.switch_page(__import__('app').DecksPage, user_id=self.user_id, switch_page=self.switch_page)),
+             lambda: self.switch_page(__import__('app').DecksPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)),
             # quiz page nav button
             ("Quiz yourself", "images/quiz_icon.png",
-             lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)),
+             lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)),
             # analytics page nav button
             ("Analytics", "images/analytics_icon.png",
-             lambda: self.switch_page(__import__('app').AnalyticsPage, user_id=self.user_id, switch_page=self.switch_page)),
+             lambda: self.switch_page(__import__('app').AnalyticsPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)),
             # settings page nav button
             ("Settings", "images/settings_icon.png",
-             lambda: self.switch_page(__import__('app').SettingsPage, user_id=self.user_id, switch_page=self.switch_page))
+             lambda: self.switch_page(__import__('app').SettingsPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db))
         ]
         # loop through nav items and create buttons
         print(list(enumerate(nav_items)))

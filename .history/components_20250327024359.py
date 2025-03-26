@@ -92,6 +92,5 @@ class BasePage(ctk.CTkFrame):
 class BaseContainer(ctk.CTkFrame):
     # initialises the base container as a subclass of CTkFrame (inheritance)
     # initialises base container with corner radius, border width, border colour, foreground colour
-    def __init__(self, master, db, corner_radius=12, border_width=1, border_color="#E5E7EB", fg_color="white"):
-        super().__init__(master, corner_radius=corner_radius, border_width=border_width, border_color=border_color, fg_color=fg_color)
-        self.db = db
+    def __init__(self, master,corner_radius=12,border_width=1,border_color="#E5E7EB",fg_color="white"):
+        super().__init__(master,corner_radius=corner_radius,border_width=border_width,border_color=border_color,fg_color=fg_color)

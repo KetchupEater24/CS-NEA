@@ -123,7 +123,7 @@ class LoginPage(ctk.CTkFrame):
         
         try:
             # verify_login checks if the username and password exist in the database, in which case the user_id is returned
-            user_id = self.db.verify_login(username, password)
+            user_id = db.verify_login(username, password)
             # if user_id is returned, page is switched to DecksPage
             # if user_id isn't returned (user does not exist in database), then an error message is shown
 
@@ -134,3 +134,4 @@ class LoginPage(ctk.CTkFrame):
         # if there is any other error during login, the Exception statement catches it and shows the error
         except Exception as e:
             messagebox.showerror("Login Error", str(e))
+

@@ -12,6 +12,7 @@ import mplcursors
 # my imports
 from components import BasePage, BaseContainer, BaseDialog
 
+
 class DecksPage(BasePage):
     # initialises decks page as a subclass of basepage (inheritance)
     def __init__(self, master, user_id, switch_page, db):
@@ -188,7 +189,6 @@ class DecksPage(BasePage):
 
         # sort decks using BST (binary search tree) (based on avg_ef)
         # how this works is explained in graph.py
-        from graph import DeckNode, insert_node, in_order
         root = None
         for deck in deck_list:
             node = DeckNode(deck_id=deck[0], deck_name=deck[1], avg_ef=deck[2], card_count=deck[3])
@@ -381,6 +381,111 @@ class DeckContainer(BaseContainer):
             self.configure(fg_color="white")
             self.checkbox.configure(fg_color="white", checkmark_color="black", hover_color="white")
 
+class CardContainer(BaseContainer):
+    # initialises card container as subclass of base container (inheritance)
+    def __init__(self, master, db, card_id, question, answer, edit_callback, delete_callback, ef, selection_callback=None):
+        super().__init__(master, db=db)
+        self.card_id = card_id
+        self.selection_callback = selection_callback  # callback for handling selection state
+        self.selected = False
+
+        # main container for card content
+        self.card_container = ctk.CTkFrame(self, fg_color="transparent")
+        self.card_container.pack(fill="x", padx=20, pady=15)
+
+        # label to display the card question in bold text
+        ctk.CTkLabel(
+            self.card_container,
+            text=question,
+            font=("Inter", 16, "bold"),
+            text_color="black"
+        ).pack(anchor="w")
+
+        # label to display the card answer
+        ctk.CTkLabel(
+            self.card_container,
+            text=answer,
+            font=("Inter", 14),
+            text_color="black"
+        ).pack(anchor="w", pady=(5, 0))
+
+        # priority indicator, determines card priority based on easiness factor (ef)
+        if ef < 2.0:
+            priority_text = "High Priority"
+            color = "red"
+        elif ef < 2.5:
+            priority_text = "Medium Priority"
+            color = "orange"
+        else:
+            priority_text = "Low Priority"
+            color = "green"
+        # label to show card priority
+        ctk.CTkLabel(
+            self.card_container,
+            text=priority_text,
+            font=("Inter", 12, "bold"),
+            text_color=color
+        ).pack(anchor="w", pady=(5, 10))
+
+        # aligns buttons_frame to be on bottom of card
+        buttons_frame = ctk.CTkFrame(self.card_container, fg_color="transparent")
+        buttons_frame.pack(side="bottom", fill="x")
+        # aligns buttons_container to be on the right of card (so now the buttons are on the bottom-right)
+        buttons_container = ctk.CTkFrame(buttons_frame, fg_color="transparent")
+        buttons_container.pack(side="right", padx=5, pady=5)
+
+        # edit button calls the edit callback for this card
+        ctk.CTkButton(
+            buttons_container,
+            text="Edit",
+            width=70,
+            height=32,
+            corner_radius=16,
+            fg_color="#F3F4F6",
+            text_color="black",
+            hover_color="#E5E7EB",
+            command=lambda: edit_callback(self.card_id)
+        ).pack(side="left", padx=(5, 2))
+        
+        # delete button, calls the delete callback for this card
+        ctk.CTkButton(
+            buttons_container,
+            text="Delete",
+            width=70,
+            height=32,
+            corner_radius=16,
+            fg_color="#FEE2E2",
+            text_color="#DC2626",
+            hover_color="#FECACA",
+            command=lambda: delete_callback(self.card_id)
+        ).pack(side="left", padx=(2, 5))
+
+        # checkbox at top right
+        self.checkbox = ctk.CTkCheckBox(
+            self,
+            text="",
+            width=24,
+            height=24,
+            corner_radius=6,
+            command=self.on_checkbox_toggle,
+            hover_color="#ffffff"
+        )
+        self.checkbox.place(relx=1.0, rely=0.0, anchor="ne", x=-10, y=10)
+    
+    def on_checkbox_toggle(self):
+        # if checkbox pressed, get its value (true if selected, otherwise false)
+        self.selected = self.checkbox.get()
+        # call selection_callback with the card id and current selection state (true or false)
+        if self.selection_callback:
+            self.selection_callback(self.card_id, self.selected)
+        # if the checkbox is selected, change background and checkbox color
+        if self.selected:
+            self.configure(fg_color="#F5F3FF")
+            self.checkbox.configure(fg_color="#636ae8", checkmark_color="white", hover_color="#636ae8")
+        # if deselected or not selected, reset background and checkbox colors to default        
+        else:
+            self.configure(fg_color="white")
+            self.checkbox.configure(fg_color="white", checkmark_color="black", hover_color="white")
 
 class CardsPage(BasePage):
     def __init__(self, master, user_id, deck_id, switch_page, db):
@@ -496,6 +601,7 @@ class CardsPage(BasePage):
         for widget in self.cards_frame.winfo_children():
             widget.destroy()
 
+        
         card_list = []
         cards = self.db.get_cards(self.deck_id)
         
@@ -560,7 +666,6 @@ class CardsPage(BasePage):
         for card in sorted_cards:
             card_container = CardContainer(
                 self.cards_frame,
-                db=self.db,
                 card_id=card[0],
                 question=card[1],
                 answer=card[2],
@@ -573,11 +678,11 @@ class CardsPage(BasePage):
 
     # call add card dialog to add a card (with question and answer)
     def add_card(self):
-        AddCardDialog(self, deck_id=self.deck_id, db=self.db)
+        AddCardDialog(self, deck_id=self.deck_id)
         self.update_card_list()
     # call edit card dialog to edit card (it's question and answer)
     def edit_card(self, card_id):
-        EditCardDialog(self, card_id, db=self.db)
+        EditCardDialog(self, card_id)
         self.update_card_list()
 
     # deletes a card
@@ -606,112 +711,6 @@ class CardsPage(BasePage):
             self.update_card_list()
             self.delete_selected_button.configure(state="disabled")
 
-class CardContainer(BaseContainer):
-    # initialises card container as subclass of base container (inheritance)
-    def __init__(self, master, db, card_id, question, answer, edit_callback, delete_callback, ef, selection_callback=None):
-        super().__init__(master, db=db)
-        self.card_id = card_id
-        self.selection_callback = selection_callback  # callback for handling selection state
-        self.selected = False
-
-        # main container for card content
-        self.card_container = ctk.CTkFrame(self, fg_color="transparent")
-        self.card_container.pack(fill="x", padx=20, pady=15)
-
-        # label to display the card question in bold text
-        ctk.CTkLabel(
-            self.card_container,
-            text=question,
-            font=("Inter", 16, "bold"),
-            text_color="black"
-        ).pack(anchor="w")
-
-        # label to display the card answer
-        ctk.CTkLabel(
-            self.card_container,
-            text=answer,
-            font=("Inter", 14),
-            text_color="black"
-        ).pack(anchor="w", pady=(5, 0))
-
-        # priority indicator, determines card priority based on easiness factor (ef)
-        if ef < 2.0:
-            priority_text = "High Priority"
-            color = "red"
-        elif ef < 2.5:
-            priority_text = "Medium Priority"
-            color = "orange"
-        else:
-            priority_text = "Low Priority"
-            color = "green"
-        # label to show card priority
-        ctk.CTkLabel(
-            self.card_container,
-            text=priority_text,
-            font=("Inter", 12, "bold"),
-            text_color=color
-        ).pack(anchor="w", pady=(5, 10))
-
-        # aligns buttons_frame to be on bottom of card
-        buttons_frame = ctk.CTkFrame(self.card_container, fg_color="transparent")
-        buttons_frame.pack(side="bottom", fill="x")
-        # aligns buttons_container to be on the right of card (so now the buttons are on the bottom-right)
-        buttons_container = ctk.CTkFrame(buttons_frame, fg_color="transparent")
-        buttons_container.pack(side="right", padx=5, pady=5)
-
-        # edit button calls the edit callback for this card
-        ctk.CTkButton(
-            buttons_container,
-            text="Edit",
-            width=70,
-            height=32,
-            corner_radius=16,
-            fg_color="#F3F4F6",
-            text_color="black",
-            hover_color="#E5E7EB",
-            command=lambda: edit_callback(self.card_id)
-        ).pack(side="left", padx=(5, 2))
-        
-        # delete button, calls the delete callback for this card
-        ctk.CTkButton(
-            buttons_container,
-            text="Delete",
-            width=70,
-            height=32,
-            corner_radius=16,
-            fg_color="#FEE2E2",
-            text_color="#DC2626",
-            hover_color="#FECACA",
-            command=lambda: delete_callback(self.card_id)
-        ).pack(side="left", padx=(2, 5))
-
-        # checkbox at top right
-        self.checkbox = ctk.CTkCheckBox(
-            self,
-            text="",
-            width=24,
-            height=24,
-            corner_radius=6,
-            command=self.on_checkbox_toggle,
-            hover_color="#ffffff"
-        )
-        self.checkbox.place(relx=1.0, rely=0.0, anchor="ne", x=-10, y=10)
-    
-    def on_checkbox_toggle(self):
-        # if checkbox pressed, get its value (true if selected, otherwise false)
-        self.selected = self.checkbox.get()
-        # call selection_callback with the card id and current selection state (true or false)
-        if self.selection_callback:
-            self.selection_callback(self.card_id, self.selected)
-        # if the checkbox is selected, change background and checkbox color
-        if self.selected:
-            self.configure(fg_color="#F5F3FF")
-            self.checkbox.configure(fg_color="#636ae8", checkmark_color="white", hover_color="#636ae8")
-        # if deselected or not selected, reset background and checkbox colors to default        
-        else:
-            self.configure(fg_color="white")
-            self.checkbox.configure(fg_color="white", checkmark_color="black", hover_color="white")
-
 class EditCardDialog(BaseDialog):
     # initialise edit card dialog as subclass of basedialog (inheritance)
     def __init__(self, parent, card_id, db):
@@ -721,6 +720,7 @@ class EditCardDialog(BaseDialog):
         self.card_id = card_id
 
         # fetch current card info from the database
+        
         card_info = self.db.get_card(card_id)
         current_question = card_info['question']
         current_answer = card_info['answer']
@@ -768,6 +768,7 @@ class EditCardDialog(BaseDialog):
         self.answer_entry.pack(fill="x", padx=10, pady=(0, 10))
         self.answer_entry.insert("1.0", current_answer)
 
+
         # create save button (defined in basedialog)
         self.create_dialog_button("Save Card", self.save_card)
         self.wait_window()
@@ -783,6 +784,7 @@ class EditCardDialog(BaseDialog):
             messagebox.showwarning("Warning", "Please fill in both question and answer")
             return
         try:
+            
             self.db.update_card(self.card_id, new_question, new_answer)
             # simply close the dialog; the calling page should update the cards list
             self.cancel_dialog_event()
@@ -851,6 +853,7 @@ class AddCardDialog(BaseDialog):
             messagebox.showwarning("Warning", "Please fill in both question and answer")
             return
         try:
+            
             self.db.create_card(self.deck_id, question, answer)
             # simply close the dialog; the calling page should update the cards list
             self.cancel_dialog_event()
@@ -866,6 +869,7 @@ class EditDeckDialog(BaseDialog):
         self.deck_id = deck_id
 
         # fetch current deck name from the database
+        
         deck_info = self.db.get_deck_info(deck_id)
         current_deck_name = deck_info["name"]
 
@@ -894,6 +898,7 @@ class EditDeckDialog(BaseDialog):
             messagebox.showwarning("Warning", "Please enter a deck name")
             return
         try:
+            
             self.db.update_deck_name(self.deck_id, new_deck_name)
             self.cancel_dialog_event()
         except Exception as e:
@@ -926,6 +931,7 @@ class AddDeckDialog(BaseDialog):
             messagebox.showwarning("Warning", "Please enter a deck name")
             return
         try:
+            
             self.db.create_deck(self.parent.user_id, new_deck_name)
             self.cancel_dialog_event()
         except Exception as e:
@@ -1100,14 +1106,14 @@ class QuizPage(BasePage):
                 selection_callback=self.toggle_deck_selection,
                 avg_ef=node.avg_ef,
                 edit_callback=None,
-                delete_callback=None,
-                db=self.db
+                delete_callback=None
             )
             deck_container.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
             col += 1
             if col == 3:
                 col = 0
                 row += 1
+
 
     def toggle_deck_selection(self, deck_id, selected):
         # iterate through all deck container widgets in the decks_frame
@@ -1140,6 +1146,7 @@ class QuizPage(BasePage):
         # enable the start button if a deck is selected, otherwise disable it
         self.start_button.configure(state="normal" if any_selected else "disabled")
 
+
     def start_quiz(self):
         # find the selected deck by iterating over deck containers
         selected_deck_id = None
@@ -1153,7 +1160,7 @@ class QuizPage(BasePage):
         # clear all widgets on screen and start the quiz session with the selected deck.
         for widget in self.master.winfo_children():
             widget.destroy()
-        QuizSession(self.master, self.user_id, selected_deck_id, self.switch_page, db=self.db)
+        QuizSession(self.master, self.user_id, selected_deck_id, self.switch_page)
 
 class QuizSession(ctk.CTkFrame):
     def __init__(self, master, user_id, deck_id, switch_page, db):
@@ -1340,7 +1347,7 @@ class QuizSession(ctk.CTkFrame):
         ctk.CTkButton(
             summary_frame, text="Return to Quiz", width=200, height=40, corner_radius=16,
             fg_color="#F3F4F6", text_color="black", hover_color="#E5E7EB",
-            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
+            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)
         ).pack(pady=20)
 
     def show_no_cards_message(self):
@@ -1351,10 +1358,11 @@ class QuizSession(ctk.CTkFrame):
         ctk.CTkLabel(msg_frame, text="No cards available for review!", font=("Inter", 18, "bold"), text_color="black").pack(expand=True)
         ctk.CTkButton(
             msg_frame, text="Return to Quiz", width=200, height=40, corner_radius=16,
-            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
+            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)
         ).pack(pady=20)
 
 matplotlib.use("Agg")  # For use with Tkinter
+
 
 class AnalyticsPage(BasePage):
     def __init__(self, master, user_id, switch_page, db):
@@ -1958,7 +1966,8 @@ class AnalyticsPage(BasePage):
             command=lambda: self.switch_page(
                 __import__('app').DecksPage,
                 user_id=self.user_id,
-                switch_page=self.switch_page
+                switch_page=self.switch_page,
+                db=self.db
             )
         ).pack(anchor="center", pady=20)
 
@@ -2123,6 +2132,7 @@ class SettingsPage(BasePage):
             self.status_label.configure(text="Please enter at least one field to update.")
             return
 
+        
         try:
             # If new_password is blank, update_user should keep the current password.
             updated = self.db.update_user(self.user_id, new_email, new_username, new_password)
@@ -2141,6 +2151,7 @@ class SettingsPage(BasePage):
         if not confirm:
             return
 
+        
         try:
             deleted = self.db.delete_user(self.user_id)
             if deleted:

@@ -15,6 +15,7 @@ class Application(ctk.CTk):
         self.current_page = None
         # create database instance to be used throughout the program
         self.db = Database()
+
         # switches page to login page when application is run
         self.switch_page(LoginPage)
 
@@ -23,7 +24,7 @@ class Application(ctk.CTk):
         for widget in self.winfo_children():
             widget.destroy()
         # create new page and set as current_page
-        self.current_page = page_class(self, db=self.db, **kwargs)
+        self.current_page = page_class(self, **kwargs)
         # pack the new page to fill it into the window
         self.current_page.pack(fill="both", expand=True)
 

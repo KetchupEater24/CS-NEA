@@ -47,16 +47,16 @@ class Sidebar(ctk.CTkFrame):
         nav_items = [
             # decks page nav button
             ("My decks", "images/decks_icon.png",
-             lambda: self.switch_page(__import__('app').DecksPage, user_id=self.user_id, switch_page=self.switch_page)),
+             lambda: self.switch_page(__import__('app').DecksPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)),
             # quiz page nav button
             ("Quiz yourself", "images/quiz_icon.png",
-             lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)),
+             lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)),
             # analytics page nav button
             ("Analytics", "images/analytics_icon.png",
-             lambda: self.switch_page(__import__('app').AnalyticsPage, user_id=self.user_id, switch_page=self.switch_page)),
+             lambda: self.switch_page(__import__('app').AnalyticsPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)),
             # settings page nav button
             ("Settings", "images/settings_icon.png",
-             lambda: self.switch_page(__import__('app').SettingsPage, user_id=self.user_id, switch_page=self.switch_page))
+             lambda: self.switch_page(__import__('app').SettingsPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db))
         ]
         # loop through nav items and create buttons
         print(list(enumerate(nav_items)))
@@ -186,7 +186,7 @@ class Sidebar(ctk.CTkFrame):
                     hover_color="#F3F4F6",
                     anchor="w",
                     height=35,
-                    command=lambda d_id=deck_id: self.switch_page(CardsPage, user_id=self.user_id, deck_id=d_id, switch_page=self.switch_page)
+                    command=lambda d_id=deck_id: self.switch_page(CardsPage, user_id=self.user_id, deck_id=d_id, switch_page=self.switch_page, db=self.db)
                 )
                 deck_btn.pack(fill="x", pady=(0, 1))
 
@@ -197,4 +197,4 @@ class Sidebar(ctk.CTkFrame):
         if messagebox.askyesno("Logout", "Are you sure you want to logout?"):
             self.current_user = None  # Clear the stored user info
             from login import LoginPage
-            self.switch_page(LoginPage)
+            self.switch_page(LoginPage, db=self.db)

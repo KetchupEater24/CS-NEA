@@ -188,7 +188,6 @@ class DecksPage(BasePage):
 
         # sort decks using BST (binary search tree) (based on avg_ef)
         # how this works is explained in graph.py
-        from graph import DeckNode, insert_node, in_order
         root = None
         for deck in deck_list:
             node = DeckNode(deck_id=deck[0], deck_name=deck[1], avg_ef=deck[2], card_count=deck[3])
@@ -1340,7 +1339,7 @@ class QuizSession(ctk.CTkFrame):
         ctk.CTkButton(
             summary_frame, text="Return to Quiz", width=200, height=40, corner_radius=16,
             fg_color="#F3F4F6", text_color="black", hover_color="#E5E7EB",
-            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
+            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)
         ).pack(pady=20)
 
     def show_no_cards_message(self):
@@ -1351,7 +1350,7 @@ class QuizSession(ctk.CTkFrame):
         ctk.CTkLabel(msg_frame, text="No cards available for review!", font=("Inter", 18, "bold"), text_color="black").pack(expand=True)
         ctk.CTkButton(
             msg_frame, text="Return to Quiz", width=200, height=40, corner_radius=16,
-            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
+            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page, db=self.db)
         ).pack(pady=20)
 
 matplotlib.use("Agg")  # For use with Tkinter
@@ -1958,7 +1957,8 @@ class AnalyticsPage(BasePage):
             command=lambda: self.switch_page(
                 __import__('app').DecksPage,
                 user_id=self.user_id,
-                switch_page=self.switch_page
+                switch_page=self.switch_page,
+                db=self.db
             )
         ).pack(anchor="center", pady=20)
 
@@ -2123,6 +2123,7 @@ class SettingsPage(BasePage):
             self.status_label.configure(text="Please enter at least one field to update.")
             return
 
+        
         try:
             # If new_password is blank, update_user should keep the current password.
             updated = self.db.update_user(self.user_id, new_email, new_username, new_password)
@@ -2141,6 +2142,7 @@ class SettingsPage(BasePage):
         if not confirm:
             return
 
+        
         try:
             deleted = self.db.delete_user(self.user_id)
             if deleted:
