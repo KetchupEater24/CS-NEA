@@ -204,7 +204,6 @@ class DecksPage(BasePage):
             deck_container = DeckContainer(
             self.decks_frame, 
             deck_id=node.deck_id,
-            user_id=self.user_id,
             deck_name=node.deck_name, 
             card_count=node.card_count,
             selection_callback=self.toggle_deck_selection,
@@ -262,10 +261,9 @@ class DecksPage(BasePage):
 
 class DeckContainer(BaseContainer):
     # initialises deck cotnainer as subclass of base container (inheritance)
-    def __init__(self, master, deck_id, user_id, deck_name, card_count, selection_callback, avg_ef, edit_callback, delete_callback):
+    def __init__(self, master, deck_id, deck_name, card_count, selection_callback, avg_ef, edit_callback, delete_callback):
         super().__init__(master)
         self.deck_id = deck_id
-        self.user_id = user_id
         self.selection_callback = selection_callback 
         self.selected = False
         self.avg_ef = avg_ef
@@ -298,10 +296,14 @@ class DeckContainer(BaseContainer):
 
         # get available for review count from database
         db = Database()
-        available_for_review = db.get_available_for_review(self.user_id, deck_id)
-        if available_for_review is None:
+        if hasattr(self.selection_callback, '__self__'):
+            # self.selection_callback is a reference to toggle_deck_selection method in deckspage
+            # toggle_deck_selection's __self__ attribute refers to the decks page, so it allows access to 
+            # user_id without needing to explicitly state it in deck container
+            available_for_review = db.get_available_for_review(self.selection_callback.__self__.user_id, deck_id)
+        else:
+            # if selection_callback does not have an attribute __self__ that refers to the decks page, default to 0
             available_for_review = 0
-
         
         # label to display how many cards are available for review
         ctk.CTkLabel(
@@ -780,11 +782,8 @@ class EditCardDialog(BaseDialog):
 
     # when save card button clicked, call save_card to update the database with new card info
     def save_card(self):
-        # for CTkTextbox, you must specify a range when retrieving text.
-        # in ("1.0", "end-1c"), the 1 means start at the first line and the 0 means start at the first character of this line
-        # then "end-1c" means retrieve all text from the first character to the last character, and also remove the trailing newline
-        new_question = self.question_entry.get("1.0", "end-1c").strip()
-        new_answer = self.answer_entry.get("1.0", "end-1c").strip()
+        new_question = self.question_entry.get().strip()
+        new_answer = self.answer_entry.get().strip()
         if not new_question or not new_answer:
             messagebox.showwarning("Warning", "Please fill in both question and answer")
             return
@@ -849,11 +848,8 @@ class AddCardDialog(BaseDialog):
 
     # when save card button clicked, call save_card to add the card to the database
     def save_card(self):
-        # for CTkTextbox, you must specify a range when retrieving text.
-        # in ("1.0", "end-1c"), the 1 means start at the first line and the 0 means start at the first character of this line
-        # then "end-1c" means retrieve all text from the first character to the last character, and also remove the trailing newline
-        question = self.question_entry.get("1.0", "end-1c").strip()
-        answer = self.answer_entry.get("1.0", "end-1c").strip()
+        question = self.question_entry.get().strip()
+        answer = self.answer_entry.get().strip()
         if not question or not answer:
             messagebox.showwarning("Warning", "Please fill in both question and answer")
             return
@@ -1106,7 +1102,6 @@ class QuizPage(BasePage):
             deck_container = DeckContainer(
                 self.decks_frame,
                 deck_id=node.deck_id,
-                user_id=self.user_id,
                 deck_name=node.deck_name,
                 card_count=node.card_count,
                 selection_callback=self.toggle_deck_selection,
@@ -1154,16 +1149,16 @@ class QuizPage(BasePage):
 
 
     def start_quiz(self):
-        # find the selected deck by iterating over deck containers
+        # Find the selected deck by iterating over deck containers
         selected_deck_id = None
         for widget in self.decks_frame.winfo_children():
-            selected_deck_id = widget.deck_id
-            break
-        # if start quiz pressed, and no deck selected, display a message
+            if hasattr(widget, "selected") and widget.selected:
+                selected_deck_id = widget.deck_id
+                break
         if selected_deck_id is None:
             messagebox.showwarning("Warning", "Please select a deck")
             return
-        # clear all widgets on screen and start the quiz session with the selected deck.
+        # Clear the master and start the quiz session with the selected deck.
         for widget in self.master.winfo_children():
             widget.destroy()
         QuizSession(self.master, self.user_id, selected_deck_id, self.switch_page)
