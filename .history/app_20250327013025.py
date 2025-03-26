@@ -261,7 +261,7 @@ class DecksPage(BasePage):
 
 class DeckContainer(BaseContainer):
     # initialises deck cotnainer as subclass of base container (inheritance)
-    def __init__(self, master, deck_id, deck_name, card_count, selection_callback, avg_ef, edit_callback, delete_callback):
+    def __init__(self, master, deck_id, user_id, deck_name, card_count, selection_callback, avg_ef, edit_callback, delete_callback):
         super().__init__(master)
         self.deck_id = deck_id
         self.selection_callback = selection_callback 

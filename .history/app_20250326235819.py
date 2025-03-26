@@ -1154,11 +1154,10 @@ class QuizPage(BasePage):
         for widget in self.decks_frame.winfo_children():
             selected_deck_id = widget.deck_id
             break
-        # if start quiz pressed, and no deck selected, display a message
         if selected_deck_id is None:
             messagebox.showwarning("Warning", "Please select a deck")
             return
-        # clear all widgets on screen and start the quiz session with the selected deck.
+        # Clear the master and start the quiz session with the selected deck.
         for widget in self.master.winfo_children():
             widget.destroy()
         QuizSession(self.master, self.user_id, selected_deck_id, self.switch_page)

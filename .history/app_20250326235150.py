@@ -374,16 +374,14 @@ class DeckContainer(BaseContainer):
     
     
     def on_checkbox_toggle(self):
-        # if checkbox pressed, get its value (true if selected, otherwise false)
+        # if checkbox pressed, set selected to true
         self.selected = self.checkbox.get()
-        # call selection_callback with the deck id and current selection state (true or false)
+        # 
         if self.selection_callback:
             self.selection_callback(self.deck_id, self.selected)
-        # if the checkbox is selected, change background and checkbox color
         if self.selected:
             self.configure(fg_color="#F5F3FF")
             self.checkbox.configure(fg_color="#636ae8", checkmark_color="white", hover_color="#636ae8")
-        # if deselected or not selected, reset background and checkbox colors to default
         else:
             self.configure(fg_color="white")
             self.checkbox.configure(fg_color="white", checkmark_color="black", hover_color="white")
@@ -480,16 +478,12 @@ class CardContainer(BaseContainer):
         self.checkbox.place(relx=1.0, rely=0.0, anchor="ne", x=-10, y=10)
     
     def on_checkbox_toggle(self):
-        # if checkbox pressed, get its value (true if selected, otherwise false)
         self.selected = self.checkbox.get()
-        # call selection_callback with the card id and current selection state (true or false)
         if self.selection_callback:
             self.selection_callback(self.card_id, self.selected)
-        # if the checkbox is selected, change background and checkbox color
         if self.selected:
             self.configure(fg_color="#F5F3FF")
             self.checkbox.configure(fg_color="#636ae8", checkmark_color="white", hover_color="#636ae8")
-        # if deselected or not selected, reset background and checkbox colors to default        
         else:
             self.configure(fg_color="white")
             self.checkbox.configure(fg_color="white", checkmark_color="black", hover_color="white")
@@ -1133,12 +1127,11 @@ class QuizPage(BasePage):
                     widget.configure(fg_color="white")
                     widget.checkbox.deselect()
             else:
-                # for all other deck containers, make them deselected
+                # for all other deck containers, force deselection
                 widget.selected = False
                 widget.configure(fg_color="white")
                 widget.checkbox.deselect()
-                
-        # iterate through deck containers and check if any are selected
+        # determine if any deck container remains selected
         any_selected = False
         for widget in self.decks_frame.winfo_children():
             if widget.selected:
@@ -1149,16 +1142,16 @@ class QuizPage(BasePage):
 
 
     def start_quiz(self):
-        # find the selected deck by iterating over deck containers
+        # Find the selected deck by iterating over deck containers
         selected_deck_id = None
         for widget in self.decks_frame.winfo_children():
-            selected_deck_id = widget.deck_id
-            break
-        # if start quiz pressed, and no deck selected, display a message
+            if hasattr(widget, "selected") and widget.selected:
+                selected_deck_id = widget.deck_id
+                break
         if selected_deck_id is None:
             messagebox.showwarning("Warning", "Please select a deck")
             return
-        # clear all widgets on screen and start the quiz session with the selected deck.
+        # Clear the master and start the quiz session with the selected deck.
         for widget in self.master.winfo_children():
             widget.destroy()
         QuizSession(self.master, self.user_id, selected_deck_id, self.switch_page)

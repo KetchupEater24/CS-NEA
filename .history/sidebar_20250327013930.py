@@ -30,13 +30,6 @@ class Sidebar(ctk.CTkFrame):
 
         self.create_buttons(nav_container, show_decks)
 
-        
-        db = Database()
-        user_info = db.get_user(self.user_id)
-        if user_info:
-            username = user_info["username"]
-        else:
-            username = "User"
         self.create_bottom_section(username)
 
     def create_buttons(self, parent, show_decks):

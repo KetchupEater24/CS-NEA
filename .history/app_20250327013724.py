@@ -16,8 +16,8 @@ from components import BasePage, BaseContainer, BaseDialog
 
 class DecksPage(BasePage):
     # initialises decks page as a subclass of basepage (inheritance)
-    def __init__(self, master, user_id, switch_page):
-        super().__init__(master, user_id, switch_page)
+    def __init__(self, master, switch_page):
+        super().__init__(master, switch_page)
         self.selected_decks = set()
 
         # header frame, container for the page title, search option and filter by priority option
