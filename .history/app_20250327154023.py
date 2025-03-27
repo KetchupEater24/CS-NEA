@@ -499,7 +499,7 @@ class CardsPage(BasePage):
         cards = self.db.get_cards(self.deck_id)
         
         # builds card_list as tuples with following, (card_id, question, answer, ef)
-        # _ is deck_id which is ignored
+        # _ is deck_id which is ignoredS
         for card in cards:
             card_id, _, question, answer = card
             ef = self.db.get_card_easiness(self.user_id, card_id)
@@ -1163,7 +1163,7 @@ class QuizSession(ctk.CTkFrame):
         self.db = db
 
         # retrieve cards available for review for this deck
-        self.cards = self.db.get_available_for_review(self.user_id, self.deck_id)
+        self.cards = self.db.get_available_for_review(self.user_id, self.deck_id, testing=False)
         if not self.cards:
             self.show_no_cards_message()
             return
@@ -1397,17 +1397,22 @@ class QuizSession(ctk.CTkFrame):
         ).pack(pady=20)
 
 
+# agg stands for anti-grain-geometry
+# it renders graph plots as png images
+matplotlib.use("Agg") 
+
+
+
 class AnalyticsPage(BasePage):
     # initialises analytics page as a subclass of basepage (inheritance)
     def __init__(self, master, user_id, switch_page, db):
         super().__init__(master, user_id, switch_page, db=db)
-        # get quiz stats for the user and initialise deck details mapping
+        # get overall quiz stats for the user and initialise deck details mapping
         self.stats = self.db.get_quiz_stats(self.user_id)
-        # deck_details stores a mapping from each deck id to its details container widget
-        # each key is a deck id and the value is the frame that holds detailed statistics for that deck
+        # deck_details stores a mapping from each deck id to its deck details container widget
         self.deck_details = {}
 
-        # header frame page title ("Analytics")
+        # header frame for the page title "Analytics"
         header_frame = ctk.CTkFrame(self.main_header_content, fg_color="transparent")
         header_frame.pack(fill="x", padx=30, pady=(20, 0))
         ctk.CTkLabel(
@@ -1421,7 +1426,7 @@ class AnalyticsPage(BasePage):
         separator = ctk.CTkFrame(self.main_header_content, height=1, fg_color="#E5E7EB")
         separator.pack(fill="x", padx=30, pady=(10, 0))
 
-        # scrollable container for analytics content
+        # scrollable container for all analytics content
         self.analytics_container = ctk.CTkScrollableFrame(
             self.main_header_content,
             fg_color="transparent",
@@ -1434,9 +1439,10 @@ class AnalyticsPage(BasePage):
         # create overall stats section, deck performance section, graph controls and return button
         self.create_overall_stats_section()
         self.create_deck_performance_section()
+        self.create_graph_controls()
         self.create_return_button()
-    
-    # creates a single stat card used in overall stats section and individual deck stats section
+
+    # creates a single stat card used in overall stats and deck details sections
     def create_stat_card(self, parent, label_text, value_text, icon_text, col_index):
         # container for an individual stat card
         stat_card_container = ctk.CTkFrame(
@@ -1447,35 +1453,33 @@ class AnalyticsPage(BasePage):
             border_color="#E5E7EB"
         )
         stat_card_container.grid(row=0, column=col_index, padx=5, sticky="nsew")
-        # inner frame holding the stat info
-        stat_info = ctk.CTkFrame(stat_card_container, fg_color="white")
-        stat_info.pack(fill="both", expand=True, padx=10, pady=10)
-        ctk.CTkLabel(stat_info, text=icon_text, font=("Inter", 18), text_color="#4B5563").pack(anchor="w")
-        ctk.CTkLabel(stat_info, text=label_text, font=("Inter", 12), text_color="#4B5563").pack(anchor="w", pady=(2, 0))
-        ctk.CTkLabel(stat_info, text=value_text, font=("Inter", 20, "bold"), text_color="#111827").pack(anchor="w", pady=(5, 0))
+        # frame holding the stat information
+        stat_info_frame = ctk.CTkFrame(stat_card_container, fg_color="white")
+        stat_info_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        ctk.CTkLabel(stat_info_frame, text=icon_text, font=("Inter", 18), text_color="#4B5563").pack(anchor="w")
+        ctk.CTkLabel(stat_info_frame, text=label_text, font=("Inter", 12), text_color="#4B5563").pack(anchor="w", pady=(2, 0))
+        ctk.CTkLabel(stat_info_frame, text=value_text, font=("Inter", 20, "bold"), text_color="#111827").pack(anchor="w", pady=(5, 0))
 
     # creates the overall statistics section
     def create_overall_stats_section(self):
-        # stat container for overall stats
-        stats_container = ctk.CTkFrame(
+        # container for overall statistics section
+        overall_stats_container = ctk.CTkFrame(
             self.analytics_container,
             fg_color="white",
             corner_radius=8,
             border_width=1,
             border_color="#E5E7EB"
         )
-        stats_container.pack(fill="x", pady=(0, 20))
-
+        overall_stats_container.pack(fill="x", pady=(0, 20))
         # title label for overall statistics
         ctk.CTkLabel(
-            stats_container,
+            overall_stats_container,
             text="Overall Statistics",
             font=("Inter", 18, "bold"),
             text_color="#111827"
         ).pack(anchor="w", padx=20, pady=(15, 10))
-
-        # stat_cards_container to hold the individual stat cards (like avg time per card, total sessions, etc.)
-        stat_cards_container = ctk.CTkFrame(stats_container, fg_color="white")
+        # container for stat cards (e.g. total sessions, quiz time, etc.)
+        stat_cards_container = ctk.CTkFrame(overall_stats_container, fg_color="white")
         stat_cards_container.pack(fill="x", padx=20, pady=(0, 15))
 
         total_sessions = self.stats.get("total_sessions", 0)
@@ -1495,101 +1499,83 @@ class AnalyticsPage(BasePage):
             ("Avg Time/Card", f"{avg_time_card:.1f}s", "⚡"),
         ]
 
-        # create stat cards in a grid with 3 rows and 2 columns
         row_count = 3
         col_count = 2
-        index = 0  # counter to iterate through stats_layout
-        
-        # iterates through stats_layout and displays each stat as a container in a 2x3 grid
-        for row in range(row_count):
+        index = 0  # counter for iterating through stats_layout
+        # create rows for stat cards
+        for _ in range(row_count):
             row_frame = ctk.CTkFrame(stat_cards_container, fg_color="white")
             row_frame.pack(fill="x", pady=5)
             row_frame.grid_columnconfigure(0, weight=1, uniform="stats_col")
             row_frame.grid_columnconfigure(1, weight=1, uniform="stats_col")
+            # create columns in each row
             for col in range(col_count):
                 if index < len(stats_layout):
                     stat_label, stat_value, stat_icon = stats_layout[index]
                     self.create_stat_card(row_frame, stat_label, stat_value, stat_icon, col)
                     index += 1
-  
 
     # creates the deck performance section
     def create_deck_performance_section(self):
         # container for deck performance stats
-        performance_container = ctk.CTkFrame(
+        deck_perf_container = ctk.CTkFrame(
             self.analytics_container,
             fg_color="white",
             corner_radius=8,
             border_width=1,
             border_color="#E5E7EB"
         )
-        performance_container.pack(fill="x", pady=(0, 20))
-
+        deck_perf_container.pack(fill="x", pady=(0, 20))
         ctk.CTkLabel(
-            performance_container,
+            deck_perf_container,
             text="Deck Performance",
             font=("Inter", 18, "bold"),
             text_color="#111827"
         ).pack(anchor="w", padx=20, pady=(15, 10))
-
-        # build a list of decks with performance scores
+        # build list of decks with performance scores
         decks = self.db.get_decks(self.user_id)
         deck_list = []
         for deck_id, deck_name in decks:
             performance_score = self.db.get_deck_performance_score(self.user_id, deck_id)
             deck_list.append((deck_id, deck_name, performance_score))
-
-        # reverse=True is needed because sort() will sort in ascending order by default, but this needs to be descending
-        # get_performance_score returns the third element of each deck in deck_list
-        # which is performance_score, and then sort() sorts the deck_list based on these performance scores in descending order
-        def get_performance_score(x):
-            return x[2]
-        deck_list.sort(key=get_performance_score, reverse=True)
-
+        # sort deck list by performance score in descending order (highest first)
+        def get_performance(item):
+            return item[2]
+        deck_list.sort(key=get_performance, reverse=True)
         # create a deck performance card for each deck
         for deck_id, deck_name, performance in deck_list:
-            self.db.get_deck_stats(self.user_id, deck_id)
-            # deck_stats = 
             # container for a single deck performance card
-            deck_performance_card = ctk.CTkFrame(
-                performance_container,
+            deck_perf_card = ctk.CTkFrame(
+                deck_perf_container,
                 fg_color="white",
                 corner_radius=8,
                 border_width=1,
                 border_color="#E5E7EB"
             )
-            deck_performance_card.pack(fill="x", padx=20, pady=5)
-
-            row_frame = ctk.CTkFrame(deck_performance_card, fg_color="white")
+            deck_perf_card.pack(fill="x", padx=20, pady=5)
+            # row frame containing deck name, performance score, and view details button
+            row_frame = ctk.CTkFrame(deck_perf_card, fg_color="white")
             row_frame.pack(fill="x", padx=15, pady=10)
-
             ctk.CTkLabel(
                 row_frame,
                 text=deck_name,
                 font=("Inter", 14, "bold"),
                 text_color="#111827"
             ).pack(side="left")
-
             # set score color based on performance thresholds
             if performance < 50:
-                # red for performance below 50
-                score_color = "#DC2626"  
-                # yellow for performance between 50 and 80
+                score_color = "#DC2626"  # red for performance below 50
             elif performance < 80:
-                score_color = "#F59E0B"  
+                score_color = "#F59E0B"  # yellow for performance between 50 and 80
             else:
-                # green for performance 80 and above
-                score_color = "#10B981"  
-                
-            # place performance on right side
+                score_color = "#10B981"  # green for performance 80 and above
             ctk.CTkLabel(
                 row_frame,
                 text=f"{performance:.1f}/100",
                 font=("Inter", 14, "bold"),
                 text_color=score_color
             ).pack(side="right", padx=(10, 0))
-
-            # view details button to view the stat containers for a deck (deck details)
+            # view details button to toggle deck details display
             view_details_button = ctk.CTkButton(
                 row_frame,
                 text="View Details",
@@ -1602,10 +1588,9 @@ class AnalyticsPage(BasePage):
                 command=lambda d_id=deck_id: self.toggle_deck_details(d_id)
             )
             view_details_button.pack(side="right", padx=(10, 0))
-
-            # hides the individual deck details container
+            # container for deck detail statistics; initially hidden
             deck_detail_container = ctk.CTkFrame(
-                deck_performance_card,
+                deck_perf_card,
                 fg_color="white",
                 corner_radius=8,
                 border_width=1,
@@ -1614,65 +1599,316 @@ class AnalyticsPage(BasePage):
             deck_detail_container.pack_forget()
             self.deck_details[deck_id] = deck_detail_container
 
-    # toggles the visibility of deck details when "view details" is clicked
+    # toggles the visibility of the deck details container for a specific deck
     def toggle_deck_details(self, deck_id):
-        # get the details frame for this deck from our deck_details mapping
         deck_details_frame = self.deck_details.get(deck_id)
         if not deck_details_frame:
             return
-
-        # if the deck details frame is already shown, hide it and exit
         if deck_details_frame.winfo_ismapped():
             deck_details_frame.pack_forget()
         else:
-            # clear any existing widgets in the details frame
+            # clear existing widgets in the deck details frame
             for widget in deck_details_frame.winfo_children():
                 widget.destroy()
-
-            # fetch deck statistics from the database for this deck
             deck_stats = self.db.get_deck_stats(self.user_id, deck_id)
-            # define layout for deck details: each tuple is (stat label, stat value, icon)
+            # layout for deck details: (label, value, icon)
             deck_details_layout = [
-                ("sessions", f"{deck_stats.get('session_count', 0)}", "📊"),
-                ("total cards reviewed", f"{deck_stats.get('total_reviewed', 0)}", "📄"),
-                ("correct answers", f"{deck_stats.get('total_correct', 0)}", "✅"),
-                ("overall accuracy", f"{deck_stats.get('accuracy', 0):.1f}%", "🎯"),
-                ("total quiz time", f"{deck_stats.get('total_time', 0):.1f}s", "⏱️"),
-                ("avg time/card", f"{deck_stats.get('avg_time_per_card', 0):.1f}s", "⚡"),
+                ("Sessions", f"{deck_stats.get('session_count', 0)}", "📊"),
+                ("Total Cards Reviewed", f"{deck_stats.get('total_reviewed', 0)}", "📄"),
+                ("Correct Answers", f"{deck_stats.get('total_correct', 0)}", "✅"),
+                ("Accuracy", f"{deck_stats.get('accuracy', 0):.1f}%", "🎯"),
+                ("Total Time (This Deck)", f"{deck_stats.get('total_time', 0):.1f}s", "⏱️"),
+                ("Avg Time/Card", f"{deck_stats.get('avg_time_per_card', 0):.1f}s", "⚡"),
             ]
-
-            # create a container frame for the deck detail stat cards
-            details_container = ctk.CTkFrame(deck_details_frame, fg_color="white")
-            details_container.pack(fill="x", expand=True, padx=15, pady=15)
-
-            # set up grid: 3 rows and 2 columns for six stat cards
+            # container for deck detail stat cards
+            details_stat_container = ctk.CTkFrame(deck_details_frame, fg_color="white")
+            details_stat_container.pack(fill="x", expand=True, padx=15, pady=15)
             row_count = 3
             col_count = 2
-            index = 0  # counter to iterate through deck_details_layout
-            
-            
-            for row in range(row_count):
-                row_frame = ctk.CTkFrame(details_container, fg_color="white")
+            index = 0  # counter for deck_details_layout
+            # iterate through rows
+            for _ in range(row_count):
+                row_frame = ctk.CTkFrame(details_stat_container, fg_color="white")
                 row_frame.pack(fill="x", pady=5)
-                row_frame.grid_columnconfigure(0, weight=1, uniform="stats_col")
-                row_frame.grid_columnconfigure(1, weight=1, uniform="stats_col")
+                row_frame.grid_columnconfigure(0, weight=1, uniform="deck_col")
+                row_frame.grid_columnconfigure(1, weight=1, uniform="deck_col")
+                # iterate through columns in the row
                 for col in range(col_count):
                     if index < len(deck_details_layout):
                         stat_label, stat_value, stat_icon = deck_details_layout[index]
-                        # create a stat card using the same function as overall stats
                         self.create_stat_card(row_frame, stat_label, stat_value, stat_icon, col)
                         index += 1
-
-            # display the deck details frame so all stat cards are visible
             deck_details_frame.pack(fill="x", pady=(5, 10))
 
-    # return to dashboard button
+    # creates graph controls for filtering and displaying performance graphs
+    def create_graph_controls(self):
+        # container for graph controls section
+        graph_control_container = ctk.CTkFrame(
+            self.analytics_container,
+            fg_color="white",
+            corner_radius=8,
+            border_width=1,
+            border_color="#E5E7EB"
+        )
+        graph_control_container.pack(fill="both", expand=True, pady=(0, 20))
+        ctk.CTkLabel(
+            graph_control_container,
+            text="Performance Graphs",
+            font=("Inter", 18, "bold"),
+            text_color="#111827"
+        ).pack(anchor="w", padx=20, pady=(15, 5))
+        # frame for graph control widgets (deck selection, graph type, and date range)
+        graph_controls_frame = ctk.CTkFrame(graph_control_container, fg_color="white")
+        graph_controls_frame.pack(fill="x", padx=20, pady=(0, 5))
+        # deck selection setup
+        decks = self.db.get_decks(self.user_id)
+        self.deck_options = {}
+        deck_names = []
+        for deck_id, deck_name in decks:
+            self.deck_options[deck_name] = deck_id
+            deck_names.append(deck_name)
+        self.selected_deck_name = ctk.StringVar(value=deck_names[0] if deck_names else "")
+        self.deck_menu = ctk.CTkOptionMenu(
+            graph_controls_frame,
+            values=deck_names,
+            variable=self.selected_deck_name,
+            width=140,
+            corner_radius=8,
+            fg_color="white",
+            button_color="#F3F4F6",
+            button_hover_color="#E5E7EB",
+            text_color="#111827"
+        )
+        self.deck_menu.pack(side="left", padx=(0, 20))
+        # graph type selection setup
+        self.selected_graph = ctk.StringVar(value="Accuracy Over Time")
+        self.graph_menu = ctk.CTkOptionMenu(
+            graph_controls_frame,
+            values=["Accuracy Over Time", "Avg Time Per Card", "Cumulative Retention"],
+            variable=self.selected_graph,
+            width=160,
+            corner_radius=8,
+            fg_color="white",
+            button_color="#F3F4F6",
+            button_hover_color="#E5E7EB",
+            text_color="#111827"
+        )
+        self.graph_menu.pack(side="left", padx=(0, 20))
+        # start date entry for graph filtering
+        self.start_date_label = ctk.CTkLabel(
+            graph_controls_frame,
+            text="Start (DD-MM-YYYY)",
+            font=("Inter", 12),
+            text_color="black"
+        )
+        self.start_date_label.pack(side="left", padx=(0, 5))
+        default_start_date = (datetime.today() - timedelta(days=30)).strftime("%d-%m-%Y")
+        self.start_date_entry = ctk.CTkEntry(
+            graph_controls_frame,
+            width=110,
+            placeholder_text="DD-MM-YYYY",
+            fg_color="#F3F4F6",
+            text_color="black",
+            border_width=0,
+            corner_radius=0
+        )
+        self.start_date_entry.pack(side="left", padx=(0, 20))
+        # end date entry for graph filtering
+        self.end_date_label = ctk.CTkLabel(
+            graph_controls_frame,
+            text="End (DD-MM-YYYY)",
+            font=("Inter", 12),
+            text_color="black"
+        )
+        self.end_date_label.pack(side="left", padx=(0, 5))
+        default_end_date = datetime.today().strftime("%d-%m-%Y")
+        self.end_date_entry = ctk.CTkEntry(
+            graph_controls_frame,
+            width=110,
+            placeholder_text="DD-MM-YYYY",
+            fg_color="#F3F4F6",
+            text_color="black",
+            border_width=0,
+            corner_radius=0
+        )
+        self.end_date_entry.pack(side="left", padx=(0, 20))
+        # button to show graph based on selected filters
+        show_graph_button = ctk.CTkButton(
+            graph_controls_frame,
+            text="Show Graph",
+            width=100,
+            height=32,
+            corner_radius=30,
+            font=("Inter", 14),
+            fg_color="#F3F4F6",
+            text_color="black",
+            hover_color="#E5E7EB",
+            command=self.show_graph
+        )
+        show_graph_button.pack(side="left")
+        # container to display the graph
+        self.graph_display_container = ctk.CTkFrame(graph_control_container, fg_color="white", corner_radius=8)
+        self.graph_display_container.pack(fill="both", expand=True, padx=20, pady=(0, 15))
+
+    # converts the date entries into date objects with fallback values if invalid
+    def convert_date_fields(self):
+        start_input = self.start_date_entry.get().strip()
+        end_input = self.end_date_entry.get().strip()
+        fallback_start = datetime.today().date() - timedelta(days=30)
+        fallback_end = datetime.today().date()
+        try:
+            start_date = fallback_start if not start_input else datetime.strptime(start_input, "%d-%m-%Y").date()
+        except Exception:
+            start_date = fallback_start
+        try:
+            end_date = fallback_end if not end_input else datetime.strptime(end_input, "%d-%m-%Y").date()
+        except Exception:
+            end_date = fallback_end
+        # swap dates if end_date comes before start_date
+        if end_date < start_date:
+            start_date, end_date = end_date, start_date
+        return (start_date, end_date)
+
+    #############################################
+    # graph display function (handles missing days as None)
+    #############################################
+    def show_graph(self):
+        # clear the current graph display container
+        for widget in self.graph_display_container.winfo_children():
+            widget.destroy()
+        selected_deck_name = self.selected_deck_name.get()
+        if selected_deck_name not in self.deck_options:
+            self.show_no_data_message()
+            return
+        deck_id = self.deck_options[selected_deck_name]
+        graph_type = self.selected_graph.get()
+        # set grouping parameters for daily grouping
+        group_by = "day"
+        group_step = 1
+        # fetch data from the database based on the selected graph type
+        if graph_type == "Accuracy Over Time":
+            labels, values = self.db.get_deck_accuracy_over_time(self.user_id, deck_id, group_by=group_by, group_step=group_step)
+            y_label = "Accuracy (%)"
+        elif graph_type == "Avg Time Per Card":
+            labels, values = self.db.get_deck_avg_time_over_time(self.user_id, deck_id, group_by=group_by, group_step=group_step)
+            y_label = "Avg Time (s)"
+        else:
+            labels, values = self.db.get_deck_cumulative_retention(self.user_id, deck_id, group_by=group_by, group_step=group_step)
+            y_label = "Cumulative Retention (%)"
+        if not labels:
+            self.show_no_data_message()
+            return
+        start_date, end_date = self.convert_date_fields()
+        # build a mapping of date to value from the fetched data
+        date_value_map = {}
+        for date_str, value in zip(labels, values):
+            try:
+                date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+                date_value_map[date_obj] = value
+            except Exception:
+                continue
+        # build a list of all dates within the specified range
+        all_dates = []
+        total_days = (end_date - start_date).days
+        if total_days < 0:
+            self.show_no_data_message()
+            return
+        for day_offset in range(total_days + 1):
+            current_date = start_date + timedelta(days=day_offset)
+            all_dates.append(current_date)
+        # create a list of values corresponding to each date (None if missing)
+        all_values = []
+        for date_obj in all_dates:
+            all_values.append(date_value_map.get(date_obj, None))
+        # format dates for the x-axis labels
+        all_date_labels = [date_obj.strftime("%d-%m-%Y") for date_obj in all_dates]
+        if not all_dates:
+            self.show_no_data_message()
+            return
+        x_positions = list(range(len(all_dates)))
+        plot_width = 8 + max(0, (len(all_dates) - 10) * 0.3)
+        plot_height = 5
+        # set up the matplotlib plot using agg backend for rendering as PNG images
+        plt.close("all")
+        matplotlib.use("Agg")
+        plt.style.use("seaborn-v0_8-whitegrid")
+        fig, ax = plt.subplots(figsize=(plot_width, plot_height))
+        line_color = "#636ae8"
+        # plot the line connecting data points (gaps occur where data is missing)
+        ax.plot(x_positions, all_values, color=line_color, linewidth=2, zorder=2)
+        # plot the individual data points as a scatter plot
+        ax.scatter(x_positions, all_values, color=line_color, s=40, zorder=3)
+        graph_title = f"{selected_deck_name} - {graph_type}"
+        ax.set_title(graph_title, fontsize=14, fontweight="bold", pad=15)
+        ax.set_xlabel("Date", fontsize=12, labelpad=10)
+        ax.set_ylabel(y_label, fontsize=12, labelpad=10)
+        ax.grid(True, linestyle="--", alpha=0.7)
+        ax.set_xticks(x_positions)
+        ax.set_xticklabels(all_date_labels, rotation=45, ha="right")
+        if graph_type in ["Accuracy Over Time", "Cumulative Retention"]:
+            ax.set_ylim([0, 100])
+        else:
+            valid_data = [v for v in all_values if v is not None]
+            if valid_data:
+                min_val = min(valid_data)
+                max_val = max(valid_data)
+                if min_val == max_val:
+                    min_val = 0
+                ax.set_ylim([min_val * 0.8, max_val * 1.2])
+        fig.patch.set_facecolor("#F9FAFB")
+        ax.set_facecolor("#FFFFFF")
+        fig.tight_layout(pad=3.0)
+        canvas = FigureCanvasTkAgg(fig, master=self.graph_display_container)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
+        # add explanation label below the graph
+        self.add_graph_explanation(graph_type)
+
+    # adds an explanation label below the graph based on the selected graph type
+    def add_graph_explanation(self, graph_type):
+        explanation_frame = ctk.CTkFrame(self.graph_display_container, fg_color="transparent")
+        explanation_frame.pack(fill="x", padx=10, pady=(5, 10))
+        if graph_type == "Accuracy Over Time":
+            explanation_text = "accuracy over time shows the ratio of correct answers to total reviewed cards each day as a percentage"
+        elif graph_type == "Avg Time Per Card":
+            explanation_text = "avg time per card shows the average number of seconds spent reviewing each card on that day"
+        else:
+            explanation_text = "cumulative retention is a running percentage calculated as cumulative correct answers divided by cumulative cards reviewed"
+        ctk.CTkLabel(
+            explanation_frame,
+            text=explanation_text,
+            font=("Inter", 12),
+            wraplength=600,
+            justify="left",
+            text_color="#4B5563"
+        ).pack(anchor="w")
+
+    # shows a message if there is no graph data available
+    def show_no_data_message(self):
+        no_data_frame = ctk.CTkFrame(self.graph_display_container, fg_color="transparent")
+        no_data_frame.pack(fill="both", expand=True)
+        ctk.CTkLabel(
+            no_data_frame,
+            text="no data available for this selection",
+            font=("Inter", 16, "bold"),
+            text_color="#4B5563"
+        ).pack(expand=True, pady=20)
+        ctk.CTkLabel(
+            no_data_frame,
+            text="complete some quizzes with this deck to see performance data",
+            font=("Inter", 14),
+            text_color="#6B7280"
+        ).pack(expand=True)
+
+    #############################################
+    # return to dashboard function
+    #############################################
     def create_return_button(self):
         return_container = ctk.CTkFrame(self.analytics_container, fg_color="transparent")
         return_container.pack(side="bottom", fill="x", pady=(10, 0))
         ctk.CTkButton(
             return_container,
-            text="Return to dashboard",
+            text="return to dashboard",
             width=200,
             height=40,
             corner_radius=16,
@@ -1683,25 +1919,29 @@ class AnalyticsPage(BasePage):
             command=lambda: self.switch_page(__import__('app').DecksPage, user_id=self.user_id, switch_page=self.switch_page)
         ).pack(anchor="center", pady=20)
 
+
 class SettingsPage(BasePage):
-    # initialise settings page as subclass of basepage
     def __init__(self, master, user_id, switch_page, db):
-        # initialize basepage (sets up sidebar, main_header_content, etc.)
+        # Initialize BasePage (sets up sidebar, main_header_content, etc.)
         super().__init__(master, user_id, switch_page, db=db)
         self.user_id = user_id
         self.switch_page = switch_page
 
-        # fetch current user info from the database; expected keys: "email", "username"
+        # Retrieve current user information from the database.
+        
         try:
+            # Assumes get_user returns a dict with keys: "email", "username"
+            # Note: We do not display the password.
             user_info = self.db.get_user(self.user_id)
             current_email = user_info.get("email", "")
             current_username = user_info.get("username", "")
         except Exception as e:
-            print(f"error fetching user info: {e}")
+            print(f"Error fetching user info: {e}")
             current_email = ""
             current_username = ""
+ 
 
-        # create header frame in the main header content area
+        # Header frame in the main content area.
         header_frame = ctk.CTkFrame(self.main_header_content, fg_color="transparent")
         header_frame.pack(fill="x", padx=30, pady=(20, 10))
         ctk.CTkLabel(
@@ -1711,15 +1951,15 @@ class SettingsPage(BasePage):
             text_color="black"
         ).pack(side="left")
 
-        # create main header content area (non-scrollable)
+        # Main content area (non-scrollable).
         main_area = ctk.CTkFrame(self.main_header_content, fg_color="white")
         main_area.pack(fill="both", expand=True, padx=30, pady=20)
 
-        # create a central container to center the settings container within main_area
+        # Central container to center the settings container within main_area.
         center_container = ctk.CTkFrame(main_area, fg_color="transparent")
         center_container.place(relx=0.5, rely=0.3, anchor="center")
 
-        # create settings container (holds the settings form) (to change username, email, password and delete account)
+        # Settings container (holds the form).
         self.settings_container = ctk.CTkFrame(
             center_container,
             fg_color="white",
@@ -1727,11 +1967,10 @@ class SettingsPage(BasePage):
             width=400,
             height=600
         )
-        
-        
         self.settings_container.pack(expand=True)
+        self.settings_container.grid_propagate(False)
 
-        # add title label inside settings container
+        # Title inside settings container.
         ctk.CTkLabel(
             self.settings_container,
             text="Update Your Account Details",
@@ -1739,7 +1978,7 @@ class SettingsPage(BasePage):
             text_color="#000000"
         ).pack(pady=(30, 20))
 
-        # add email label and entry (with current email)
+        # Email Entry (pre-populated with current email).
         ctk.CTkLabel(
             self.settings_container,
             text="Email",
@@ -1758,7 +1997,7 @@ class SettingsPage(BasePage):
         self.email_entry.pack(pady=(0, 10))
         self.email_entry.insert(0, current_email)
 
-        # add username label and entry (with current username)
+        # Username Entry (pre-populated with current username).
         ctk.CTkLabel(
             self.settings_container,
             text="Username",
@@ -1777,7 +2016,7 @@ class SettingsPage(BasePage):
         self.username_entry.pack(pady=(0, 10))
         self.username_entry.insert(0, current_username)
 
-        # add password label and entry (left blank so user can enter a new password if desired)
+        # Password Entry (left blank so user can enter a new password if desired).
         ctk.CTkLabel(
             self.settings_container,
             text="Password",
@@ -1796,9 +2035,9 @@ class SettingsPage(BasePage):
             show="•"
         )
         self.password_entry.pack(pady=(0, 10))
-        # note: do not pre-populate the password field
+        # Do not pre-populate the password field.
 
-        # add update settings button
+        # Update Settings button.
         ctk.CTkButton(
             self.settings_container,
             text="Update",
@@ -1808,10 +2047,10 @@ class SettingsPage(BasePage):
             fg_color="#F3F4F6",
             text_color="black",
             hover_color="#E5E7EB",
-            command=self.update
+            command=self.update_settings
         ).pack(pady=20)
 
-        # add delete account button
+        # Delete Account button.
         ctk.CTkButton(
             self.settings_container,
             text="Delete Account",
@@ -1824,7 +2063,7 @@ class SettingsPage(BasePage):
             command=self.delete_account
         ).pack(pady=10)
 
-        # add status label for feedback messages
+        # Status label for feedback messages.
         self.status_label = ctk.CTkLabel(
             self.settings_container,
             text="",
@@ -1832,18 +2071,18 @@ class SettingsPage(BasePage):
         )
         self.status_label.pack(pady=10)
 
-    def update(self):
+    def update_settings(self):
         new_email = self.email_entry.get().strip()
         new_username = self.username_entry.get().strip()
         new_password = self.password_entry.get().strip()
 
-        # if no fields are provided, show an error message
+        # If all fields are empty, show an error.
         if not new_email and not new_username and not new_password:
             self.status_label.configure(text="Please enter at least one field to update.")
             return
 
         try:
-            # update the user information; if new_password is blank, the current password remains unchanged
+            # If new_password is blank, update_user should keep the current password.
             updated = self.db.update_user(self.user_id, new_email, new_username, new_password)
             if updated:
                 self.status_label.configure(text="Settings updated successfully.", text_color="#16A34A")
@@ -1853,21 +2092,20 @@ class SettingsPage(BasePage):
             self.status_label.configure(text=f"Error: {str(e)}", text_color="#DC2626")
 
     def delete_account(self):
-        # ask for confirmation before deleting the account
         confirm = messagebox.askyesno(
-            "Confirm deletion",
-            "Are you sure you want to delete your account? this action cannot be undone."
+            "Confirm Deletion",
+            "Are you sure you want to delete your account? This action cannot be undone."
         )
         if not confirm:
             return
-        
+
         try:
             deleted = self.db.delete_user(self.user_id)
             if deleted:
-                messagebox.showinfo("Account deleted", "Your account has been deleted.")
+                messagebox.showinfo("Account Deleted", "Your account has been deleted.")
                 from login import LoginPage
                 self.switch_page(LoginPage)
             else:
-                messagebox.showerror("Deletion failed", "Failed to delete your account. Please try again later.")
+                messagebox.showerror("Deletion Failed", "Failed to delete your account. Please try again later.")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {str(e)}")

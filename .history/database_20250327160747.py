@@ -10,7 +10,7 @@ class Database:
         self.cursor = self.conn.cursor()
         self.create()
 
-    # creates the database tables
+    # creates the required tables if they do not exist
     def create(self):
         # users table
         self.cursor.execute("""

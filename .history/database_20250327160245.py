@@ -10,7 +10,7 @@ class Database:
         self.cursor = self.conn.cursor()
         self.create()
 
-    # creates the database tables
+    # creates the required tables if they do not exist
     def create(self):
         # users table
         self.cursor.execute("""
@@ -120,7 +120,7 @@ class Database:
             print(f"Error fetching user: {e}")
             return None
 
-    # updates user's email, username, and/or password, returns True if update occurred
+    # updates user's email, username, and/or password; returns True if update occurred
     def update_user(self, user_id, new_email=None, new_username=None, new_password=None):
         try:
             current_data = self.get_user(user_id)
@@ -143,7 +143,7 @@ class Database:
             print(f"Error updating user: {e}")
             return False
 
-    # deletes a user and all associated decks/cards, returns True if deletion succeeded
+    # deletes a user and all associated decks/cards; returns True if deletion succeeded
     def delete_user(self, user_id):
         try:
             self.cursor.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
@@ -244,7 +244,7 @@ class Database:
         result = self.cursor.fetchone()
         return result[0] if result else 0
 
-    # returns the easiness factor (ef) for a card, defaults to 2.5 if not set
+    # returns the easiness factor (ef) for a card; defaults to 2.5 if not set
     def get_card_easiness(self, user_id, card_id):
         self.cursor.execute(
             "SELECT ef FROM spaced_rep WHERE user_id = ? AND card_id = ?",
@@ -254,36 +254,6 @@ class Database:
         if row and row[0] is not None:
             return row[0]
         return 2.5
-        
-    # returns the count of cards available for review for a given deck and user
-    def get_available_for_review_count(self, user_id, deck_id):
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.cursor.execute("""
-            SELECT COUNT(*)
-            FROM cards c
-            LEFT JOIN spaced_rep s ON c.card_id = s.card_id AND s.user_id = ?
-            WHERE c.deck_id = ?
-              AND (s.next_review_date IS NULL OR s.next_review_date <= ?)
-        """, (user_id, deck_id, now_str))
-        result = self.cursor.fetchone()
-        return result[0] if result else 0
-
-    # returns cards available for review, if testing is True, returns all cards in the deck
-    def get_available_for_review(self, user_id, deck_id):
-        # returns all cards for the given deck that are due for review (or have no scheduled review date)
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.cursor.execute("""
-            SELECT c.card_id, c.question, c.answer, COALESCE(s.next_review_date, ?) as next_review_date
-            FROM cards c
-            LEFT JOIN spaced_rep s ON c.card_id = s.card_id AND s.user_id = ?
-            WHERE c.deck_id = ?
-            AND (s.next_review_date IS NULL OR s.next_review_date <= ?)
-            ORDER BY next_review_date ASC
-            LIMIT 100
-        """, (now_str, user_id, deck_id, now_str))
-        return self.cursor.fetchall()
-
-
 
     # saves a quiz result in the database and returns the new result id
     def save_quiz_result(self, user_id, deck_id, total_cards, correct_count, avg_time, deck_time):
@@ -421,10 +391,8 @@ class Database:
             return (datetime.strptime(row[0], fmt), datetime.strptime(row[1], fmt))
         return (None, None)
 
-    # updates spaced repetition data for a card based on quality rating (difficulty the user selected during quiz session)
-    # and time taken and returns new review time info
+    # updates spaced repetition data for a card based on quality rating and time taken; returns new review time info
     def update_spaced_rep(self, user_id, card_id, quality, time_taken, is_correct):
-        # retrieve current spaced repetition record for the user and card
         self.cursor.execute("""
             SELECT repetition, interval, ef
             FROM spaced_rep
@@ -432,7 +400,6 @@ class Database:
         """, (user_id, card_id))
         record = self.cursor.fetchone()
 
-        # if a record exists, assign the values; otherwise, initialize default values and insert a new record
         if record:
             repetition, old_interval, ef = record
         else:
@@ -446,13 +413,11 @@ class Database:
             """, (user_id, card_id, repetition, old_interval, ef, now_str, time_taken, is_correct))
             self.conn.commit()
 
-        # if the quality is low (2 or less), schedule review in minutes and reset repetition count
         if quality <= 2:
             mapping_minutes = {0: 2, 1: 6, 2: 10}
             new_interval = mapping_minutes.get(quality, 10)
             repetition = 0  # reset repetition for minute intervals
             next_review_time = datetime.now() + timedelta(minutes=new_interval)
-        # for higher quality responses, schedule review in days and increment repetition count
         else:
             mapping_days = {3: 1, 4: 3}
             days = mapping_days.get(quality, 1)
@@ -461,12 +426,10 @@ class Database:
             next_review_time = next_day
             repetition += 1
 
-        # update the ef (easiness factor) based on quality and ensure it does not fall below 1.3
         new_ef = ef + (0.1 - (4 - quality) * (0.08 + (4 - quality) * 0.02))
         if new_ef < 1.3:
             new_ef = 1.3
 
-        # format the next review time and update the spaced repetition record in the database
         next_review_str = next_review_time.strftime("%Y-%m-%d %H:%M:%S")
         self.cursor.execute("""
             UPDATE spaced_rep
@@ -474,8 +437,6 @@ class Database:
             WHERE user_id = ? AND card_id = ?
         """, (repetition, new_interval, new_ef, next_review_str, time_taken, is_correct, user_id, card_id))
         self.conn.commit()
-        
-        # return the updated review time, repetition count, new interval, and new easiness factor
         return next_review_time, repetition, new_interval, new_ef
 
     # commits any changes and closes the database connection
@@ -486,6 +447,41 @@ class Database:
             self.conn.close()
         except Exception as e:
             print(f"Error closing database: {e}")
+
+    # returns the count of cards available for review for a given deck and user
+    def get_available_for_review_count(self, user_id, deck_id):
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.cursor.execute("""
+            SELECT COUNT(*)
+            FROM cards c
+            LEFT JOIN spaced_rep s ON c.card_id = s.card_id AND s.user_id = ?
+            WHERE c.deck_id = ?
+              AND (s.next_review_date IS NULL OR s.next_review_date <= ?)
+        """, (user_id, deck_id, now_str))
+        result = self.cursor.fetchone()
+        return result[0] if result else 0
+
+    # returns cards available for review; if testing is True, returns all cards in the deck
+    def get_available_for_review(self, user_id, deck_id, testing=False):
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if testing:
+            self.cursor.execute("""
+                SELECT c.card_id, c.question, c.answer, ? as next_review_date
+                FROM cards c
+                WHERE c.deck_id = ?
+            """, (now_str, deck_id))
+        else:
+            self.cursor.execute("""
+                SELECT c.card_id, c.question, c.answer, COALESCE(s.next_review_date, ?) as next_review_date
+                FROM cards c
+                LEFT JOIN spaced_rep s ON c.card_id = s.card_id AND s.user_id = ?
+                WHERE c.deck_id = ?
+                  AND (s.next_review_date IS NULL OR s.next_review_date <= ?)
+                ORDER BY next_review_date ASC
+                LIMIT 100
+            """, (now_str, user_id, deck_id, now_str))
+        return self.cursor.fetchall()
+
 
 # if this file is run directly, create/update the database and then close the connection
 if __name__ == "__main__":

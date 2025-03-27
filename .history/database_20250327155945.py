@@ -10,7 +10,7 @@ class Database:
         self.cursor = self.conn.cursor()
         self.create()
 
-    # creates the database tables
+    # creates the required tables if they do not exist
     def create(self):
         # users table
         self.cursor.execute("""
@@ -120,7 +120,7 @@ class Database:
             print(f"Error fetching user: {e}")
             return None
 
-    # updates user's email, username, and/or password, returns True if update occurred
+    # updates user's email, username, and/or password; returns True if update occurred
     def update_user(self, user_id, new_email=None, new_username=None, new_password=None):
         try:
             current_data = self.get_user(user_id)
@@ -143,7 +143,7 @@ class Database:
             print(f"Error updating user: {e}")
             return False
 
-    # deletes a user and all associated decks/cards, returns True if deletion succeeded
+    # deletes a user and all associated decks/cards; returns True if deletion succeeded
     def delete_user(self, user_id):
         try:
             self.cursor.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
@@ -244,7 +244,7 @@ class Database:
         result = self.cursor.fetchone()
         return result[0] if result else 0
 
-    # returns the easiness factor (ef) for a card, defaults to 2.5 if not set
+    # returns the easiness factor (ef) for a card; defaults to 2.5 if not set
     def get_card_easiness(self, user_id, card_id):
         self.cursor.execute(
             "SELECT ef FROM spaced_rep WHERE user_id = ? AND card_id = ?",
@@ -254,36 +254,6 @@ class Database:
         if row and row[0] is not None:
             return row[0]
         return 2.5
-        
-    # returns the count of cards available for review for a given deck and user
-    def get_available_for_review_count(self, user_id, deck_id):
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.cursor.execute("""
-            SELECT COUNT(*)
-            FROM cards c
-            LEFT JOIN spaced_rep s ON c.card_id = s.card_id AND s.user_id = ?
-            WHERE c.deck_id = ?
-              AND (s.next_review_date IS NULL OR s.next_review_date <= ?)
-        """, (user_id, deck_id, now_str))
-        result = self.cursor.fetchone()
-        return result[0] if result else 0
-
-    # returns cards available for review, if testing is True, returns all cards in the deck
-    def get_available_for_review(self, user_id, deck_id):
-        # returns all cards for the given deck that are due for review (or have no scheduled review date)
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.cursor.execute("""
-            SELECT c.card_id, c.question, c.answer, COALESCE(s.next_review_date, ?) as next_review_date
-            FROM cards c
-            LEFT JOIN spaced_rep s ON c.card_id = s.card_id AND s.user_id = ?
-            WHERE c.deck_id = ?
-            AND (s.next_review_date IS NULL OR s.next_review_date <= ?)
-            ORDER BY next_review_date ASC
-            LIMIT 100
-        """, (now_str, user_id, deck_id, now_str))
-        return self.cursor.fetchall()
-
-
 
     # saves a quiz result in the database and returns the new result id
     def save_quiz_result(self, user_id, deck_id, total_cards, correct_count, avg_time, deck_time):
@@ -421,10 +391,227 @@ class Database:
             return (datetime.strptime(row[0], fmt), datetime.strptime(row[1], fmt))
         return (None, None)
 
-    # updates spaced repetition data for a card based on quality rating (difficulty the user selected during quiz session)
-    # and time taken and returns new review time info
+    # adds a step (in hours or days) to a given datetime
+    def add_step(self, dt, group_by, step):
+        if group_by == "hour":
+            return dt + timedelta(hours=step)
+        else:
+            return dt + timedelta(days=step)
+
+    # returns deck accuracy over time as (labels, values); groups by session, hour, or day
+    def get_deck_accuracy_over_time(self, user_id, deck_id, group_by="day", group_step=1):
+        if group_by == "session":
+            self.cursor.execute("""
+                   SELECT result_id, correct_count, total_cards
+                   FROM quiz
+                   WHERE user_id = ? AND deck_id = ?
+                   ORDER BY result_id
+               """, (user_id, deck_id))
+            rows = self.cursor.fetchall()
+            labels = []
+            values = []
+            for row in rows:
+                rid, c_count, t_count = row
+                c_count = c_count or 0
+                t_count = t_count or 0
+                acc = (c_count / t_count * 100) if t_count > 0 else 0
+                labels.append(f"Session {rid}")
+                values.append(acc)
+            return (labels, values)
+
+        min_ts, max_ts = self.get_deck_timestamp_range(user_id, deck_id)
+        if not min_ts or not max_ts:
+            return ([], [])
+
+        self.cursor.execute("""
+               SELECT timestamp, correct_count, total_cards
+               FROM quiz
+               WHERE user_id = ? AND deck_id = ?
+               ORDER BY timestamp
+           """, (user_id, deck_id))
+        all_rows = self.cursor.fetchall()
+
+        fmt = "%Y-%m-%d %H:%M:%S"
+        data = []
+        for row in all_rows:
+            ts_str, c_count, t_count = row
+            dt_obj = datetime.strptime(ts_str, fmt)
+            data.append((dt_obj, c_count or 0, t_count or 0))
+
+        intervals = []
+        current = min_ts
+        while current <= max_ts:
+            nxt = self.add_step(current, group_by, group_step)
+            intervals.append((current, nxt))
+            current = nxt
+
+        labels = []
+        values = []
+        for (start_dt, end_dt) in intervals:
+            sum_correct = 0
+            sum_total = 0
+            for (dt_obj, c_count, t_count) in data:
+                if start_dt <= dt_obj < end_dt:
+                    sum_correct += c_count
+                    sum_total += t_count
+            if sum_total > 0:
+                acc = (sum_correct / sum_total) * 100
+            else:
+                acc = 0
+            if group_by == "hour":
+                label_str = start_dt.strftime("%Y-%m-%d %H:00")
+            else:
+                label_str = start_dt.strftime("%Y-%m-%d")
+            labels.append(label_str)
+            values.append(acc)
+        return (labels, values)
+
+    # returns average time per card over time as (labels, values)
+    def get_deck_avg_time_over_time(self, user_id, deck_id, group_by="day", group_step=1):
+        if group_by == "session":
+            self.cursor.execute("""
+                   SELECT result_id, avg_time
+                   FROM quiz
+                   WHERE user_id = ? AND deck_id = ?
+                   ORDER BY result_id
+               """, (user_id, deck_id))
+            rows = self.cursor.fetchall()
+            labels = []
+            vals = []
+            for row in rows:
+                rid, a_time = row
+                a_time = a_time or 0
+                labels.append(f"Session {rid}")
+                vals.append(a_time)
+            return (labels, vals)
+
+        min_ts, max_ts = self.get_deck_timestamp_range(user_id, deck_id)
+        if not min_ts or not max_ts:
+            return ([], [])
+
+        self.cursor.execute("""
+               SELECT timestamp, avg_time
+               FROM quiz
+               WHERE user_id = ? AND deck_id = ?
+               ORDER BY timestamp
+           """, (user_id, deck_id))
+        all_rows = self.cursor.fetchall()
+
+        fmt = "%Y-%m-%d %H:%M:%S"
+        data = []
+        for row in all_rows:
+            ts_str, a_time = row
+            dt_obj = datetime.strptime(ts_str, fmt)
+            data.append((dt_obj, a_time or 0))
+
+        intervals = []
+        current = min_ts
+        while current <= max_ts:
+            nxt = self.add_step(current, group_by, group_step)
+            intervals.append((current, nxt))
+            current = nxt
+
+        labels = []
+        vals = []
+        for (start_dt, end_dt) in intervals:
+            sum_time = 0.0
+            count = 0
+            for (dt_obj, a_time) in data:
+                if start_dt <= dt_obj < end_dt:
+                    sum_time += a_time
+                    count += 1
+            if count > 0:
+                avg_val = sum_time / count
+            else:
+                avg_val = 0.0
+            if group_by == "hour":
+                lb = start_dt.strftime("%Y-%m-%d %H:00")
+            else:
+                lb = start_dt.strftime("%Y-%m-%d")
+            labels.append(lb)
+            vals.append(avg_val)
+        return (labels, vals)
+
+    # returns cumulative retention over time as (labels, values)
+    def get_deck_cumulative_retention(self, user_id, deck_id, group_by="day", group_step=1):
+        if group_by == "session":
+            self.cursor.execute("""
+                   SELECT result_id, correct_count, total_cards
+                   FROM quiz
+                   WHERE user_id = ? AND deck_id = ?
+                   ORDER BY result_id
+               """, (user_id, deck_id))
+            rows = self.cursor.fetchall()
+            cum_correct = 0
+            cum_total = 0
+            labels = []
+            vals = []
+            for r in rows:
+                rid, c_count, t_count = r
+                c_count = c_count or 0
+                t_count = t_count or 0
+                cum_correct += c_count
+                cum_total += t_count
+                if cum_total > 0:
+                    ret = (cum_correct / cum_total) * 100
+                else:
+                    ret = 0
+                labels.append(f"Session {rid}")
+                vals.append(ret)
+            return (labels, vals)
+
+        min_ts, max_ts = self.get_deck_timestamp_range(user_id, deck_id)
+        if not min_ts or not max_ts:
+            return ([], [])
+
+        self.cursor.execute("""
+               SELECT timestamp, correct_count, total_cards
+               FROM quiz
+               WHERE user_id = ? AND deck_id = ?
+               ORDER BY timestamp
+           """, (user_id, deck_id))
+        rows = self.cursor.fetchall()
+        fmt = "%Y-%m-%d %H:%M:%S"
+        data = []
+        for row in rows:
+            ts_str, c_count, t_count = row
+            dt_obj = datetime.strptime(ts_str, fmt)
+            data.append((dt_obj, c_count or 0, t_count or 0))
+
+        intervals = []
+        current = min_ts
+        while current <= max_ts:
+            nxt = self.add_step(current, group_by, group_step)
+            intervals.append((current, nxt))
+            current = nxt
+
+        cum_correct = 0
+        cum_total = 0
+        labels = []
+        vals = []
+        for (start_dt, end_dt) in intervals:
+            chunk_correct = 0
+            chunk_total = 0
+            for (dt_obj, cc, tc) in data:
+                if start_dt <= dt_obj < end_dt:
+                    chunk_correct += cc
+                    chunk_total += tc
+            cum_correct += chunk_correct
+            cum_total += chunk_total
+            if cum_total > 0:
+                ret = (cum_correct / cum_total) * 100
+            else:
+                ret = 0
+            if group_by == "hour":
+                lb = start_dt.strftime("%Y-%m-%d %H:00")
+            else:
+                lb = start_dt.strftime("%Y-%m-%d")
+            labels.append(lb)
+            vals.append(ret)
+        return (labels, vals)
+
+    # updates spaced repetition data for a card based on quality rating and time taken; returns new review time info
     def update_spaced_rep(self, user_id, card_id, quality, time_taken, is_correct):
-        # retrieve current spaced repetition record for the user and card
         self.cursor.execute("""
             SELECT repetition, interval, ef
             FROM spaced_rep
@@ -432,7 +619,6 @@ class Database:
         """, (user_id, card_id))
         record = self.cursor.fetchone()
 
-        # if a record exists, assign the values; otherwise, initialize default values and insert a new record
         if record:
             repetition, old_interval, ef = record
         else:
@@ -446,13 +632,11 @@ class Database:
             """, (user_id, card_id, repetition, old_interval, ef, now_str, time_taken, is_correct))
             self.conn.commit()
 
-        # if the quality is low (2 or less), schedule review in minutes and reset repetition count
         if quality <= 2:
             mapping_minutes = {0: 2, 1: 6, 2: 10}
             new_interval = mapping_minutes.get(quality, 10)
             repetition = 0  # reset repetition for minute intervals
             next_review_time = datetime.now() + timedelta(minutes=new_interval)
-        # for higher quality responses, schedule review in days and increment repetition count
         else:
             mapping_days = {3: 1, 4: 3}
             days = mapping_days.get(quality, 1)
@@ -461,12 +645,10 @@ class Database:
             next_review_time = next_day
             repetition += 1
 
-        # update the ef (easiness factor) based on quality and ensure it does not fall below 1.3
         new_ef = ef + (0.1 - (4 - quality) * (0.08 + (4 - quality) * 0.02))
         if new_ef < 1.3:
             new_ef = 1.3
 
-        # format the next review time and update the spaced repetition record in the database
         next_review_str = next_review_time.strftime("%Y-%m-%d %H:%M:%S")
         self.cursor.execute("""
             UPDATE spaced_rep
@@ -474,8 +656,6 @@ class Database:
             WHERE user_id = ? AND card_id = ?
         """, (repetition, new_interval, new_ef, next_review_str, time_taken, is_correct, user_id, card_id))
         self.conn.commit()
-        
-        # return the updated review time, repetition count, new interval, and new easiness factor
         return next_review_time, repetition, new_interval, new_ef
 
     # commits any changes and closes the database connection
@@ -486,6 +666,41 @@ class Database:
             self.conn.close()
         except Exception as e:
             print(f"Error closing database: {e}")
+
+    # returns the count of cards available for review for a given deck and user
+    def get_available_for_review_count(self, user_id, deck_id):
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.cursor.execute("""
+            SELECT COUNT(*)
+            FROM cards c
+            LEFT JOIN spaced_rep s ON c.card_id = s.card_id AND s.user_id = ?
+            WHERE c.deck_id = ?
+              AND (s.next_review_date IS NULL OR s.next_review_date <= ?)
+        """, (user_id, deck_id, now_str))
+        result = self.cursor.fetchone()
+        return result[0] if result else 0
+
+    # returns cards available for review; if testing is True, returns all cards in the deck
+    def get_available_for_review(self, user_id, deck_id, testing=False):
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if testing:
+            self.cursor.execute("""
+                SELECT c.card_id, c.question, c.answer, ? as next_review_date
+                FROM cards c
+                WHERE c.deck_id = ?
+            """, (now_str, deck_id))
+        else:
+            self.cursor.execute("""
+                SELECT c.card_id, c.question, c.answer, COALESCE(s.next_review_date, ?) as next_review_date
+                FROM cards c
+                LEFT JOIN spaced_rep s ON c.card_id = s.card_id AND s.user_id = ?
+                WHERE c.deck_id = ?
+                  AND (s.next_review_date IS NULL OR s.next_review_date <= ?)
+                ORDER BY next_review_date ASC
+                LIMIT 100
+            """, (now_str, user_id, deck_id, now_str))
+        return self.cursor.fetchall()
+
 
 # if this file is run directly, create/update the database and then close the connection
 if __name__ == "__main__":

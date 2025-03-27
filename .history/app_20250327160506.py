@@ -1808,7 +1808,7 @@ class SettingsPage(BasePage):
             fg_color="#F3F4F6",
             text_color="black",
             hover_color="#E5E7EB",
-            command=self.update
+            command=self.update_settings
         ).pack(pady=20)
 
         # add delete account button
@@ -1832,7 +1832,7 @@ class SettingsPage(BasePage):
         )
         self.status_label.pack(pady=10)
 
-    def update(self):
+    def update_settings(self):
         new_email = self.email_entry.get().strip()
         new_username = self.username_entry.get().strip()
         new_password = self.password_entry.get().strip()

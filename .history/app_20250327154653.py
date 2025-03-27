@@ -1163,7 +1163,7 @@ class QuizSession(ctk.CTkFrame):
         self.db = db
 
         # retrieve cards available for review for this deck
-        self.cards = self.db.get_available_for_review(self.user_id, self.deck_id)
+        self.cards = self.db.get_available_for_review(self.user_id, self.deck_id, testing=False)
         if not self.cards:
             self.show_no_cards_message()
             return
@@ -1397,6 +1397,11 @@ class QuizSession(ctk.CTkFrame):
         ).pack(pady=20)
 
 
+# agg stands for anti-grain-geometry
+# it renders graph plots as png images
+matplotlib.use("Agg") 
+
+
 class AnalyticsPage(BasePage):
     # initialises analytics page as a subclass of basepage (inheritance)
     def __init__(self, master, user_id, switch_page, db):
@@ -1434,6 +1439,7 @@ class AnalyticsPage(BasePage):
         # create overall stats section, deck performance section, graph controls and return button
         self.create_overall_stats_section()
         self.create_deck_performance_section()
+        self.create_graph_controls()
         self.create_return_button()
     
     # creates a single stat card used in overall stats section and individual deck stats section
@@ -1501,7 +1507,7 @@ class AnalyticsPage(BasePage):
         index = 0  # counter to iterate through stats_layout
         
         # iterates through stats_layout and displays each stat as a container in a 2x3 grid
-        for row in range(row_count):
+        for x in range(row_count):
             row_frame = ctk.CTkFrame(stat_cards_container, fg_color="white")
             row_frame.pack(fill="x", pady=5)
             row_frame.grid_columnconfigure(0, weight=1, uniform="stats_col")
@@ -1616,59 +1622,51 @@ class AnalyticsPage(BasePage):
 
     # toggles the visibility of deck details when "view details" is clicked
     def toggle_deck_details(self, deck_id):
-        # get the details frame for this deck from our deck_details mapping
         deck_details_frame = self.deck_details.get(deck_id)
         if not deck_details_frame:
             return
 
-        # if the deck details frame is already shown, hide it and exit
         if deck_details_frame.winfo_ismapped():
             deck_details_frame.pack_forget()
         else:
-            # clear any existing widgets in the details frame
+            # clear existing widgets in detail frame
             for widget in deck_details_frame.winfo_children():
                 widget.destroy()
 
-            # fetch deck statistics from the database for this deck
             deck_stats = self.db.get_deck_stats(self.user_id, deck_id)
-            # define layout for deck details: each tuple is (stat label, stat value, icon)
+            # layout for deck details: (label, value, icon)
             deck_details_layout = [
-                ("sessions", f"{deck_stats.get('session_count', 0)}", "📊"),
-                ("total cards reviewed", f"{deck_stats.get('total_reviewed', 0)}", "📄"),
-                ("correct answers", f"{deck_stats.get('total_correct', 0)}", "✅"),
-                ("overall accuracy", f"{deck_stats.get('accuracy', 0):.1f}%", "🎯"),
-                ("total quiz time", f"{deck_stats.get('total_time', 0):.1f}s", "⏱️"),
-                ("avg time/card", f"{deck_stats.get('avg_time_per_card', 0):.1f}s", "⚡"),
+                ("Sessions", f"{deck_stats.get('session_count', 0)}", "📊"),
+                ("Total Cards Reviewed", f"{deck_stats.get('total_reviewed', 0)}", "📄"),
+                ("Correct Answers", f"{deck_stats.get('total_correct', 0)}", "✅"),
+                ("Accuracy", f"{deck_stats.get('accuracy', 0):.1f}%", "🎯"),
+                ("Total Time (This Deck)", f"{deck_stats.get('total_time', 0):.1f}s", "⏱️"),
+                ("Avg Time/Card", f"{deck_stats.get('avg_time_per_card', 0):.1f}s", "⚡"),
             ]
-
-            # create a container frame for the deck detail stat cards
+            # container for deck detail stats
             details_container = ctk.CTkFrame(deck_details_frame, fg_color="white")
             details_container.pack(fill="x", expand=True, padx=15, pady=15)
 
-            # set up grid: 3 rows and 2 columns for six stat cards
+            # iterates through stats_layout and displays each stat as a container in a 2x3 grid
             row_count = 3
             col_count = 2
-            index = 0  # counter to iterate through deck_details_layout
-            
-            
-            for row in range(row_count):
+            index = 0
+            for x in range(row_count):
                 row_frame = ctk.CTkFrame(details_container, fg_color="white")
                 row_frame.pack(fill="x", pady=5)
-                row_frame.grid_columnconfigure(0, weight=1, uniform="stats_col")
-                row_frame.grid_columnconfigure(1, weight=1, uniform="stats_col")
-                for col in range(col_count):
+                row_frame.grid_columnconfigure(0, weight=1, uniform="deck_col")
+                row_frame.grid_columnconfigure(1, weight=1, uniform="deck_col")
+                for x in range(col_count):
                     if index < len(deck_details_layout):
                         stat_label, stat_value, stat_icon = deck_details_layout[index]
-                        # create a stat card using the same function as overall stats
-                        self.create_stat_card(row_frame, stat_label, stat_value, stat_icon, col)
+                        self.create_stat_card(row_frame, stat_label, stat_value, stat_icon, 0)
                         index += 1
 
-            # display the deck details frame so all stat cards are visible
             deck_details_frame.pack(fill="x", pady=(5, 10))
 
     # return to dashboard button
     def create_return_button(self):
-        return_container = ctk.CTkFrame(self.analytics_container, fg_color="transparent")
+        return_container = ctk.CTkFrame(self.analytics_area, fg_color="transparent")
         return_container.pack(side="bottom", fill="x", pady=(10, 0))
         ctk.CTkButton(
             return_container,
@@ -1683,25 +1681,29 @@ class AnalyticsPage(BasePage):
             command=lambda: self.switch_page(__import__('app').DecksPage, user_id=self.user_id, switch_page=self.switch_page)
         ).pack(anchor="center", pady=20)
 
+
 class SettingsPage(BasePage):
-    # initialise settings page as subclass of basepage
     def __init__(self, master, user_id, switch_page, db):
-        # initialize basepage (sets up sidebar, main_header_content, etc.)
+        # Initialize BasePage (sets up sidebar, main_header_content, etc.)
         super().__init__(master, user_id, switch_page, db=db)
         self.user_id = user_id
         self.switch_page = switch_page
 
-        # fetch current user info from the database; expected keys: "email", "username"
+        # Retrieve current user information from the database.
+        
         try:
+            # Assumes get_user returns a dict with keys: "email", "username"
+            # Note: We do not display the password.
             user_info = self.db.get_user(self.user_id)
             current_email = user_info.get("email", "")
             current_username = user_info.get("username", "")
         except Exception as e:
-            print(f"error fetching user info: {e}")
+            print(f"Error fetching user info: {e}")
             current_email = ""
             current_username = ""
+ 
 
-        # create header frame in the main header content area
+        # Header frame in the main content area.
         header_frame = ctk.CTkFrame(self.main_header_content, fg_color="transparent")
         header_frame.pack(fill="x", padx=30, pady=(20, 10))
         ctk.CTkLabel(
@@ -1711,15 +1713,15 @@ class SettingsPage(BasePage):
             text_color="black"
         ).pack(side="left")
 
-        # create main header content area (non-scrollable)
+        # Main content area (non-scrollable).
         main_area = ctk.CTkFrame(self.main_header_content, fg_color="white")
         main_area.pack(fill="both", expand=True, padx=30, pady=20)
 
-        # create a central container to center the settings container within main_area
+        # Central container to center the settings container within main_area.
         center_container = ctk.CTkFrame(main_area, fg_color="transparent")
         center_container.place(relx=0.5, rely=0.3, anchor="center")
 
-        # create settings container (holds the settings form) (to change username, email, password and delete account)
+        # Settings container (holds the form).
         self.settings_container = ctk.CTkFrame(
             center_container,
             fg_color="white",
@@ -1727,11 +1729,10 @@ class SettingsPage(BasePage):
             width=400,
             height=600
         )
-        
-        
         self.settings_container.pack(expand=True)
+        self.settings_container.grid_propagate(False)
 
-        # add title label inside settings container
+        # Title inside settings container.
         ctk.CTkLabel(
             self.settings_container,
             text="Update Your Account Details",
@@ -1739,7 +1740,7 @@ class SettingsPage(BasePage):
             text_color="#000000"
         ).pack(pady=(30, 20))
 
-        # add email label and entry (with current email)
+        # Email Entry (pre-populated with current email).
         ctk.CTkLabel(
             self.settings_container,
             text="Email",
@@ -1758,7 +1759,7 @@ class SettingsPage(BasePage):
         self.email_entry.pack(pady=(0, 10))
         self.email_entry.insert(0, current_email)
 
-        # add username label and entry (with current username)
+        # Username Entry (pre-populated with current username).
         ctk.CTkLabel(
             self.settings_container,
             text="Username",
@@ -1777,7 +1778,7 @@ class SettingsPage(BasePage):
         self.username_entry.pack(pady=(0, 10))
         self.username_entry.insert(0, current_username)
 
-        # add password label and entry (left blank so user can enter a new password if desired)
+        # Password Entry (left blank so user can enter a new password if desired).
         ctk.CTkLabel(
             self.settings_container,
             text="Password",
@@ -1796,9 +1797,9 @@ class SettingsPage(BasePage):
             show="•"
         )
         self.password_entry.pack(pady=(0, 10))
-        # note: do not pre-populate the password field
+        # Do not pre-populate the password field.
 
-        # add update settings button
+        # Update Settings button.
         ctk.CTkButton(
             self.settings_container,
             text="Update",
@@ -1808,10 +1809,10 @@ class SettingsPage(BasePage):
             fg_color="#F3F4F6",
             text_color="black",
             hover_color="#E5E7EB",
-            command=self.update
+            command=self.update_settings
         ).pack(pady=20)
 
-        # add delete account button
+        # Delete Account button.
         ctk.CTkButton(
             self.settings_container,
             text="Delete Account",
@@ -1824,7 +1825,7 @@ class SettingsPage(BasePage):
             command=self.delete_account
         ).pack(pady=10)
 
-        # add status label for feedback messages
+        # Status label for feedback messages.
         self.status_label = ctk.CTkLabel(
             self.settings_container,
             text="",
@@ -1832,18 +1833,18 @@ class SettingsPage(BasePage):
         )
         self.status_label.pack(pady=10)
 
-    def update(self):
+    def update_settings(self):
         new_email = self.email_entry.get().strip()
         new_username = self.username_entry.get().strip()
         new_password = self.password_entry.get().strip()
 
-        # if no fields are provided, show an error message
+        # If all fields are empty, show an error.
         if not new_email and not new_username and not new_password:
             self.status_label.configure(text="Please enter at least one field to update.")
             return
 
         try:
-            # update the user information; if new_password is blank, the current password remains unchanged
+            # If new_password is blank, update_user should keep the current password.
             updated = self.db.update_user(self.user_id, new_email, new_username, new_password)
             if updated:
                 self.status_label.configure(text="Settings updated successfully.", text_color="#16A34A")
@@ -1853,21 +1854,20 @@ class SettingsPage(BasePage):
             self.status_label.configure(text=f"Error: {str(e)}", text_color="#DC2626")
 
     def delete_account(self):
-        # ask for confirmation before deleting the account
         confirm = messagebox.askyesno(
-            "Confirm deletion",
-            "Are you sure you want to delete your account? this action cannot be undone."
+            "Confirm Deletion",
+            "Are you sure you want to delete your account? This action cannot be undone."
         )
         if not confirm:
             return
-        
+
         try:
             deleted = self.db.delete_user(self.user_id)
             if deleted:
-                messagebox.showinfo("Account deleted", "Your account has been deleted.")
+                messagebox.showinfo("Account Deleted", "Your account has been deleted.")
                 from login import LoginPage
                 self.switch_page(LoginPage)
             else:
-                messagebox.showerror("Deletion failed", "Failed to delete your account. Please try again later.")
+                messagebox.showerror("Deletion Failed", "Failed to delete your account. Please try again later.")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {str(e)}")
