@@ -1109,36 +1109,34 @@ class QuizPage(BasePage):
                 row += 1
 
     def toggle_deck_selection(self, deck_id, selected):
-        # iterate through each deck container widget in the decks_frame
+        # iterate through all deck container widgets in the decks_frame
         for widget in self.decks_frame.winfo_children():
-            # if this deck container widget corresponds to the deck that was toggled
             if widget.deck_id == deck_id:
-                # update its selected state to be same as the deck whose checkbox was toggled 
-                # (e.g make selected = True for this deck container widget)
+                # If this widget matches the given deck_id, update its selection state.
                 widget.selected = selected
-                # if the deck is selected, change its background and mark its checkbox
                 if selected:
                     widget.configure(fg_color="#F5F3FF")
                     widget.checkbox.select()
-                # if the deck is deselected, reset its background and unmark its checkbox
                 else:
                     widget.configure(fg_color="white")
                     widget.checkbox.deselect()
             else:
-                # for all other decks, ensure they are not selected and their appearance is normal
+                # For all other widgets, ensure they are not selected.
                 widget.selected = False
                 widget.configure(fg_color="white")
                 widget.checkbox.deselect()
         
-        # determine if any deck container is currently selected
+        # Manually check if at least one deck is selected.
         selected_found = False
         for widget in self.decks_frame.winfo_children():
             if widget.selected:
                 selected_found = True
                 break
 
-        # enable the start button if any deck is selected, otherwise, disable it
+        # Enable the start button if any deck is selected, otherwise disable it.
         self.start_button.configure(state="normal" if selected_found else "disabled")
+
+
 
     def start_quiz(self):
         # initialize variable to store the selected deck's id

@@ -253,7 +253,8 @@ class DecksPage(BasePage):
                 self.db.delete_deck(deck_id)
             self.selected_decks.clear()
             self.update_deck_list()
-            self.sidebar.update_deck_list()
+            if hasattr(self, 'sidebar'):
+                self.sidebar.update_deck_list()
             self.delete_selected_button.configure(state="disabled")
 
 class DeckContainer(BaseContainer):
@@ -1109,52 +1110,38 @@ class QuizPage(BasePage):
                 row += 1
 
     def toggle_deck_selection(self, deck_id, selected):
-        # iterate through each deck container widget in the decks_frame
+        # iterate through all deck container widgets in the decks_frame
         for widget in self.decks_frame.winfo_children():
-            # if this deck container widget corresponds to the deck that was toggled
             if widget.deck_id == deck_id:
-                # update its selected state to be same as the deck whose checkbox was toggled 
-                # (e.g make selected = True for this deck container widget)
                 widget.selected = selected
-                # if the deck is selected, change its background and mark its checkbox
                 if selected:
                     widget.configure(fg_color="#F5F3FF")
                     widget.checkbox.select()
-                # if the deck is deselected, reset its background and unmark its checkbox
                 else:
                     widget.configure(fg_color="white")
                     widget.checkbox.deselect()
             else:
-                # for all other decks, ensure they are not selected and their appearance is normal
                 widget.selected = False
                 widget.configure(fg_color="white")
                 widget.checkbox.deselect()
-        
-        # determine if any deck container is currently selected
-        selected_found = False
-        for widget in self.decks_frame.winfo_children():
-            if widget.selected:
-                selected_found = True
-                break
-
-        # enable the start button if any deck is selected, otherwise, disable it
-        self.start_button.configure(state="normal" if selected_found else "disabled")
+        any_selected = any(getattr(widget, "selected", False) for widget in self.decks_frame.winfo_children())
+        self.start_button.configure(state="normal" if any_selected else "disabled")
 
     def start_quiz(self):
-        # initialize variable to store the selected deck's id
+        # initialize variable to store the selected deck's ID.
         selected_deck_id = None
-        # iterate through all deck container widgets in the decks_frame
+        # iterate through all deck container widgets in the decks_frame.
         for widget in self.decks_frame.winfo_children():
-            # check if the current deck containeer widget is selected
+            # check if the current deck containeer widget is selected.
             if widget.selected:
-                # if selected, store its deck_id and break out of the loop
+                # if selected, store its deck_id and break out of the loop.
                 selected_deck_id = widget.deck_id
                 break
-        # if no deck is selected, show a warning message (since quiz can't begin without a deck being selected)
+        # if no deck is selected, show a warning message.
         if selected_deck_id is None:
             messagebox.showwarning("Warning", "Please select a deck")
             return
-        # destroy all widgets in on the window to clear the screen
+        # destroy all widgets in on the window to clear the screen.
         for widget in self.master.winfo_children():
             widget.destroy()
         # starts a quiz session with the selected deck

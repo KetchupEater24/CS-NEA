@@ -1140,6 +1140,9 @@ class QuizPage(BasePage):
         # enable the start button if any deck is selected, otherwise, disable it
         self.start_button.configure(state="normal" if selected_found else "disabled")
 
+
+
+
     def start_quiz(self):
         # initialize variable to store the selected deck's id
         selected_deck_id = None
