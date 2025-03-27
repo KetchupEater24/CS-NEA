@@ -812,7 +812,7 @@ class Database:
         except Exception as e:
             print(f"Error closing database: {e}")
 
-    def get_available_for_review_count(self, user_id, deck_id):
+    def get_cards_available_for_review_count(self, user_id, deck_id):
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.cursor.execute("""
             SELECT COUNT(*)
@@ -824,7 +824,7 @@ class Database:
         result = self.cursor.fetchone()
         return result[0] if result else 0
 
-    def get_available_for_review(self, user_id, deck_id, testing=False):
+    def get_due_cards(self, user_id, deck_id, testing=False):
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         if testing:
             # In testing mode, return all cards with the current time as the next_review_date.

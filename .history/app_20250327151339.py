@@ -1439,24 +1439,6 @@ class AnalyticsPage(BasePage):
         self.create_deck_performance_section()
         self.create_graph_controls()
         self.create_return_button()
-    
-    # creates a single stat card used in overall stats section and individual deck stats section
-    def create_stat_card(self, parent, label_text, value_text, icon_text, col_index):
-        # container for an individual stat card
-        stat_card_container = ctk.CTkFrame(
-            parent,
-            fg_color="white",
-            corner_radius=8,
-            border_width=1,
-            border_color="#E5E7EB"
-        )
-        stat_card_container.grid(row=0, column=col_index, padx=5, sticky="nsew")
-        # inner frame holding the stat info
-        stat_info = ctk.CTkFrame(stat_card_container, fg_color="white")
-        stat_info.pack(fill="both", expand=True, padx=10, pady=10)
-        ctk.CTkLabel(stat_info, text=icon_text, font=("Inter", 18), text_color="#4B5563").pack(anchor="w")
-        ctk.CTkLabel(stat_info, text=label_text, font=("Inter", 12), text_color="#4B5563").pack(anchor="w", pady=(2, 0))
-        ctk.CTkLabel(stat_info, text=value_text, font=("Inter", 20, "bold"), text_color="#111827").pack(anchor="w", pady=(5, 0))
 
     # creates the overall statistics section
     def create_overall_stats_section(self):
@@ -1515,7 +1497,24 @@ class AnalyticsPage(BasePage):
                     stat_label, stat_value, stat_icon = stats_layout[index]
                     self.create_stat_card(row_frame, stat_label, stat_value, stat_icon, col)
                     index += 1
-  
+
+    # creates a single stat card used in overall stats section
+    def create_stat_card(self, parent, label_text, value_text, icon_text, col_index):
+        # container for an individual stat card
+        stat_card_container = ctk.CTkFrame(
+            parent,
+            fg_color="white",
+            corner_radius=8,
+            border_width=1,
+            border_color="#E5E7EB"
+        )
+        stat_card_container.grid(row=0, column=col_index, padx=5, sticky="nsew")
+        # inner frame holding the stat info
+        stat_info = ctk.CTkFrame(stat_card_container, fg_color="white")
+        stat_info.pack(fill="both", expand=True, padx=10, pady=10)
+        ctk.CTkLabel(stat_info, text=icon_text, font=("Inter", 18), text_color="#4B5563").pack(anchor="w")
+        ctk.CTkLabel(stat_info, text=label_text, font=("Inter", 12), text_color="#4B5563").pack(anchor="w", pady=(2, 0))
+        ctk.CTkLabel(stat_info, text=value_text, font=("Inter", 20, "bold"), text_color="#111827").pack(anchor="w", pady=(5, 0))
 
     # creates the deck performance section
     def create_deck_performance_section(self):
@@ -1540,31 +1539,26 @@ class AnalyticsPage(BasePage):
         decks = self.db.get_decks(self.user_id)
         deck_list = []
         for deck_id, deck_name in decks:
-            performance_score = self.db.get_deck_performance_score(self.user_id, deck_id)
-            deck_list.append((deck_id, deck_name, performance_score))
+            perf_score = self.db.get_deck_performance_score(self.user_id, deck_id)
+            deck_list.append((deck_id, deck_name, perf_score))
 
-        # reverse=True is needed because sort() will sort in ascending order by default, but this needs to be descending
-        # get_performance_score returns the third element of each deck in deck_list
-        # which is performance_score, and then sort() sorts the deck_list based on these performance scores in descending order
-        def get_performance_score(x):
-            return x[2]
-        deck_list.sort(key=get_performance_score, reverse=True)
+        # sort deck list by performance score in descending order (highest first)
+        deck_list.sort(key=lambda item: item[2], reverse=True)
 
         # create a deck performance card for each deck
-        for deck_id, deck_name, performance in deck_list:
-            self.db.get_deck_stats(self.user_id, deck_id)
-            # deck_stats = 
+        for deck_id, deck_name, perf in deck_list:
+            deck_stats = self.db.get_deck_stats(self.user_id, deck_id)
             # container for a single deck performance card
-            deck_performance_card = ctk.CTkFrame(
+            deck_perf_card = ctk.CTkFrame(
                 performance_container,
                 fg_color="white",
                 corner_radius=8,
                 border_width=1,
                 border_color="#E5E7EB"
             )
-            deck_performance_card.pack(fill="x", padx=20, pady=5)
+            deck_perf_card.pack(fill="x", padx=20, pady=5)
 
-            row_frame = ctk.CTkFrame(deck_performance_card, fg_color="white")
+            row_frame = ctk.CTkFrame(deck_perf_card, fg_color="white")
             row_frame.pack(fill="x", padx=15, pady=10)
 
             ctk.CTkLabel(
@@ -1575,26 +1569,20 @@ class AnalyticsPage(BasePage):
             ).pack(side="left")
 
             # set score color based on performance thresholds
-            if performance < 50:
-                # red for performance below 50
-                score_color = "#DC2626"  
-                # yellow for performance between 50 and 80
-            elif performance < 80:
-                score_color = "#F59E0B"  
-            else:
-                # green for performance 80 and above
-                score_color = "#10B981"  
-                
-            # place performance on right side
+            score_color = "#10B981"
+            if perf < 50:
+                score_color = "#DC2626"
+            elif perf < 75:
+                score_color = "#F59E0B"
+
             ctk.CTkLabel(
                 row_frame,
-                text=f"{performance:.1f}/100",
+                text=f"{perf:.1f}/100",
                 font=("Inter", 14, "bold"),
                 text_color=score_color
             ).pack(side="right", padx=(10, 0))
 
-            # view details button to view the stat containers for a deck (deck details)
-            view_details_button = ctk.CTkButton(
+            view_btn = ctk.CTkButton(
                 row_frame,
                 text="View Details",
                 width=100,
@@ -1605,11 +1593,11 @@ class AnalyticsPage(BasePage):
                 hover_color="#E5E7EB",
                 command=lambda d_id=deck_id: self.toggle_deck_details(d_id)
             )
-            view_details_button.pack(side="right", padx=(10, 0))
+            view_btn.pack(side="right", padx=(10, 0))
 
-            # hides the individual deck details container
+            # create a hidden details container for deck-specific stats
             deck_detail_container = ctk.CTkFrame(
-                deck_performance_card,
+                deck_perf_card,
                 fg_color="white",
                 corner_radius=8,
                 border_width=1,
