@@ -930,8 +930,9 @@ class AddDeckDialog(BaseDialog):
         except Exception as e:
             messagebox.showerror("Error", f"Failed to create deck: {str(e)}")
 
+
 class QuizPage(BasePage):
-    # initialise quiz page as subclass of base page (inheritance)
+    # initialise quiz page as subclass of base page  (inheritance)
     def __init__(self, master, user_id, switch_page, db):
         super().__init__(master, user_id, switch_page, db=db)
 
@@ -948,11 +949,11 @@ class QuizPage(BasePage):
         )
         self.header_title.pack(side="left")
 
-        # create filter frame for deck search and priority filter (same as decks page)
+        # filter frame to hold priority selection and search field (works same way as it does in decks page)
+        # refer to decks page for comments that explain the below code
         self.filter_frame = ctk.CTkFrame(self.header_frame, fg_color="transparent")
         self.filter_frame.pack(side="right", padx=10)
         
-        # deck search entry
         self.deck_search_input = ctk.StringVar()
         self.deck_search_entry_field = ctk.CTkEntry(
             self.filter_frame,
@@ -966,7 +967,6 @@ class QuizPage(BasePage):
         )
         self.deck_search_entry_field.pack(side="left", padx=5)
 
-        # deck priority filter dropdown
         self.deck_priority_filter_selection = ctk.StringVar(value="All")
         self.deck_priority_filter_menu = ctk.CTkOptionMenu(
             self.filter_frame,
@@ -980,11 +980,10 @@ class QuizPage(BasePage):
         )
         self.deck_priority_filter_menu.pack(side="left", padx=5)
         
-        # update deck list when search or filter changes
         self.deck_search_input.trace_add("write", lambda *args: self.update_deck_list())
         self.deck_priority_filter_selection.trace_add("write", lambda *args: self.update_deck_list())
 
-        # start quiz button (initially disabled)
+        # start quiz button
         self.start_button = ctk.CTkButton(
             self.header_frame,
             text="Start Quiz",
@@ -999,11 +998,11 @@ class QuizPage(BasePage):
         )
         self.start_button.pack(side="right", padx=(0, 10))
 
-        # separator to divide header from main content
+        # seperator, to seperate header from the main content of the page below
         self.separator = ctk.CTkFrame(self.main_header_content, height=1, fg_color="#E5E7EB")
         self.separator.pack(fill="x", padx=30, pady=(20, 0))
 
-        # selection frame holds a label prompting the user to select a deck
+        # selection frame holds a label to tell the user to select decks for a quiz
         self.selection_frame = ctk.CTkFrame(self.main_header_content, fg_color="transparent")
         self.selection_frame.pack(fill="both", expand=True, padx=30, pady=20)
         ctk.CTkLabel(
@@ -1013,7 +1012,6 @@ class QuizPage(BasePage):
             text_color="black"
         ).pack(anchor="w", pady=(0, 10))
 
-        # scrollable frame for displaying deck containers
         self.decks_frame = ctk.CTkScrollableFrame(
             self.selection_frame,
             fg_color="transparent",
@@ -1023,10 +1021,10 @@ class QuizPage(BasePage):
         self.decks_frame.pack(fill="both", expand=True)
         self.decks_frame.grid_columnconfigure((0, 1, 2), weight=1, pad=10)
 
-        # update deck list when quiz page is shown
+        # calls update_deck_list to show decks, when quiz page is shown
         self.update_deck_list()
 
-    # update deck list (same as in decks page)
+    # refer to decks page for comments explaining the below function
     def update_deck_list(self):
         for widget in self.decks_frame.winfo_children():
             widget.destroy()
@@ -1047,22 +1045,31 @@ class QuizPage(BasePage):
             card_count = self.db.get_card_count(deck_id)
             deck_list.append((deck_id, deck_name, avg_ef, card_count))
 
-        # filter deck list based on search query
         search_query = self.deck_search_input.get().lower().strip()
         if search_query:
-            deck_list = [deck for deck in deck_list if search_query in deck[1].lower()]
+            filtered_deck_list = []
+            for deck in deck_list:
+                if search_query in deck[1].lower():
+                    filtered_deck_list.append(deck)
+            deck_list = filtered_deck_list
 
-        # filter deck list based on priority selection
         priority_filter = self.deck_priority_filter_selection.get().lower()
         if priority_filter != "all":
+            filtered_deck_list = []
             if priority_filter == "high":
-                deck_list = [deck for deck in deck_list if deck[2] < 2.0]
+                for deck in deck_list:
+                    if deck[2] < 2.0:
+                        filtered_deck_list.append(deck)
             elif priority_filter == "medium":
-                deck_list = [deck for deck in deck_list if 2.0 <= deck[2] < 2.5]
+                for deck in deck_list:
+                    if 2.0 <= deck[2] < 2.5:
+                        filtered_deck_list.append(deck)
             elif priority_filter == "low":
-                deck_list = [deck for deck in deck_list if deck[2] >= 2.5]
+                for deck in deck_list:
+                    if deck[2] >= 2.5:
+                        filtered_deck_list.append(deck)
+            deck_list = filtered_deck_list
 
-        # if no decks found, display a message
         if not deck_list:
             no_decks_frame = ctk.CTkFrame(self.decks_frame, fg_color="transparent")
             no_decks_frame.pack(fill="both", expand=True)
@@ -1074,7 +1081,6 @@ class QuizPage(BasePage):
             ).pack(expand=True, pady=50)
             return
 
-        # sort decks using bst (based on avg_ef)
         from graph import DeckNode, insert_node, in_order
         root = None
         for deck in deck_list:
@@ -1082,7 +1088,6 @@ class QuizPage(BasePage):
             root = insert_node(root, node)
         sorted_nodes = in_order(root)
 
-        # create a deck container for each deck
         row, col = 0, 0
         for node in sorted_nodes:
             deck_container = DeckContainer(
@@ -1104,54 +1109,56 @@ class QuizPage(BasePage):
                 row += 1
 
     def toggle_deck_selection(self, deck_id, selected):
-        # iterate through each deck container widget in the decks frame
+        # iterate through each deck container widget in the decks_frame
         for widget in self.decks_frame.winfo_children():
-            # if this widget's deck id matches the toggled deck's id
+            # if this deck container widget corresponds to the deck that was toggled
             if widget.deck_id == deck_id:
-                # set its selected state to the same as the toggled deck
+                # update its selected state to be same as the deck whose checkbox was toggled 
+                # (e.g make selected = True for this deck container widget)
                 widget.selected = selected
-                # if selected, change background and mark checkbox; if not, reset appearance
+                # if the deck is selected, change its background and mark its checkbox
                 if selected:
                     widget.configure(fg_color="#F5F3FF")
                     widget.checkbox.select()
+                # if the deck is deselected, reset its background and unmark its checkbox
                 else:
                     widget.configure(fg_color="white")
                     widget.checkbox.deselect()
             else:
-                # ensure all other deck containers are deselected
+                # for all other decks, ensure they are not selected and their appearance is normal
                 widget.selected = False
                 widget.configure(fg_color="white")
                 widget.checkbox.deselect()
         
-        # manually check if any deck is selected
+        # determine if any deck container is currently selected
         selected_found = False
         for widget in self.decks_frame.winfo_children():
             if widget.selected:
                 selected_found = True
                 break
 
-        # enable the start button if any deck is selected, otherwise disable it
+        # enable the start button if any deck is selected, otherwise, disable it
         self.start_button.configure(state="normal" if selected_found else "disabled")
 
     def start_quiz(self):
         # initialize variable to store the selected deck's id
         selected_deck_id = None
-        # iterate through all deck container widgets in the decks frame
+        # iterate through all deck container widgets in the decks_frame
         for widget in self.decks_frame.winfo_children():
+            # check if the current deck containeer widget is selected
             if widget.selected:
-                # if found, store its deck id and exit loop
+                # if selected, store its deck_id and break out of the loop
                 selected_deck_id = widget.deck_id
                 break
-        # if no deck is selected, show a warning message
+        # if no deck is selected, show a warning message (since quiz can't begin without a deck being selected)
         if selected_deck_id is None:
             messagebox.showwarning("Warning", "Please select a deck")
             return
-        # clear all widgets on the window to start the quiz session
+        # destroy all widgets in on the window to clear the screen
         for widget in self.master.winfo_children():
             widget.destroy()
-        # start a quiz session with the selected deck, passing along the db connection
+        # starts a quiz session with the selected deck
         QuizSession(self.master, self.user_id, selected_deck_id, self.switch_page, db=self.db)
-
 
 class QuizSession(ctk.CTkFrame):
     def __init__(self, master, user_id, deck_id, switch_page, db):
@@ -1162,9 +1169,9 @@ class QuizSession(ctk.CTkFrame):
         self.switch_page = switch_page
         self.db = db
 
-        # retrieve due cards for this deck
-        # note: using testing=False here ensures only cards with a next_review_date in the past are shown
-        self.cards = self.db.get_due_cards(self.user_id, self.deck_id, testing=False)
+        # Retrieve due cards for this deck (tuple: card_id, question, answer, next_review_date)
+        # Setting testing=True ensures cards are shown even if their next review date hasn't arrived.
+        self.cards = self.db.get_due_cards(self.user_id, self.deck_id, testing=True)
         if not self.cards:
             self.show_no_cards_message()
             return
@@ -1174,35 +1181,25 @@ class QuizSession(ctk.CTkFrame):
         self.session_start_time = datetime.now()
         self.current_index = 0
 
-        # header with title, progress, and timer
+        # Header with title, progress, and timer.
         self.header = ctk.CTkFrame(self, fg_color="#F3F4F6", height=60)
         self.header.pack(fill="x", pady=(0, 20))
-        self.title_label = ctk.CTkLabel(
-            self.header, text="Quiz Session", font=("Inter", 18, "bold"), text_color="black"
-        )
+        self.title_label = ctk.CTkLabel(self.header, text="Quiz Session", font=("Inter", 18, "bold"), text_color="black")
         self.title_label.pack(side="left", padx=30)
-        self.progress_label = ctk.CTkLabel(
-            self.header, text=f"Card 1/{self.total_cards}", font=("Inter", 14), text_color="#4B5563"
-        )
+        self.progress_label = ctk.CTkLabel(self.header, text=f"Card 1/{self.total_cards}", font=("Inter", 14), text_color="#4B5563")
         self.progress_label.pack(side="right", padx=30)
-        self.timer_label = ctk.CTkLabel(
-            self.header, text="Time Elapsed: 00:00:00", font=("Inter", 14), text_color="#4B5563"
-        )
+        self.timer_label = ctk.CTkLabel(self.header, text="Time Elapsed: 00:00:00", font=("Inter", 14), text_color="#4B5563")
         self.timer_label.pack(side="right", padx=30)
 
-        # main content for question and answer
+        # Main content for question/answer
         self.content = ctk.CTkFrame(self, fg_color="white")
         self.content.pack(fill="both", expand=True, padx=30, pady=20)
-        self.question_label = ctk.CTkLabel(
-            self.content, text="", font=("Inter", 16), text_color="black", wraplength=600
-        )
+        self.question_label = ctk.CTkLabel(self.content, text="", font=("Inter", 16), text_color="black", wraplength=600)
         self.question_label.pack(pady=20)
 
-        # answer area (initially hidden)
+        # Answer area (hidden until "Show Answer")
         self.answer_frame = ctk.CTkFrame(self.content, fg_color="transparent")
-        self.answer_label = ctk.CTkLabel(
-            self.answer_frame, text="", font=("Inter", 16), text_color="black", wraplength=600
-        )
+        self.answer_label = ctk.CTkLabel(self.answer_frame, text="", font=("Inter", 16), text_color="black", wraplength=600)
         self.answer_label.pack(pady=20)
 
         self.show_answer_button = ctk.CTkButton(
@@ -1211,12 +1208,12 @@ class QuizSession(ctk.CTkFrame):
         )
         self.show_answer_button.pack(pady=20)
 
-        # difficulty rating options with new mapping:
-        # quality 0: very hard (2 mins)
-        # quality 1: hard (6 mins)
-        # quality 2: medium (10 mins)
-        # quality 3: easy (1 day)
-        # quality 4: very easy (3 days)
+        # Difficulty Rating Options (new labels with new mapping)
+        # Quality 0: Very Hard (2 mins)
+        # Quality 1: Hard (6 mins)
+        # Quality 2: Medium (10 mins)
+        # Quality 3: Easy (1 day)
+        # Quality 4: Very Easy (3 days)
         self.rating_frame = ctk.CTkFrame(self.content, fg_color="transparent")
         rating_options = [
             ("Very Hard (2 mins)", 0),
@@ -1225,17 +1222,19 @@ class QuizSession(ctk.CTkFrame):
             ("Easy (1 day)", 3),
             ("Very Easy (3 days)", 4)
         ]
+
         for text, quality in rating_options:
             if quality in (0, 1):
-                # for very hard or hard, use red styling
+                # Very Hard or Hard → Red styling
                 button_fg = "#FEE2E2"
                 button_text = "#DC2626"
                 button_hover = "#FECACA"
             else:
-                # for medium, easy, or very easy, use neutral styling
+                # Medium, Easy, Very Easy → Neutral styling
                 button_fg = "#F3F4F6"
                 button_text = "black"
                 button_hover = "#E5E7EB"
+
             button = ctk.CTkButton(
                 self.rating_frame,
                 text=text,
@@ -1248,15 +1247,13 @@ class QuizSession(ctk.CTkFrame):
                 command=lambda q=quality: self.rate_card_difficulty(q)
             )
             button.pack(side="left", padx=5)
-        # hide rating frame until answer is shown
-        self.rating_frame.pack_forget()
 
-        # start timer and display the first card
+        self.rating_frame.pack_forget()  # Hide until answer is revealed
+
         self.update_timer()
         self.display_card()
 
     def update_timer(self):
-        # update the timer label every second
         if not self.timer_label.winfo_exists():
             return
         elapsed = datetime.now() - self.session_start_time
@@ -1268,18 +1265,17 @@ class QuizSession(ctk.CTkFrame):
         self.after(1000, self.update_timer)
 
     def display_card(self):
-        # if no more cards remain, end the quiz
         if self.current_index >= self.total_cards:
             self.end_quiz()
             return
 
-        # hide answer and rating frame; show the "show answer" button
+        # Hide answer and rating; show "Show Answer" button.
         self.answer_frame.pack_forget()
         self.rating_frame.pack_forget()
         self.show_answer_button.pack(pady=20)
 
-        # get current card (tuple: card_id, question, answer, next_review_date)
         card = self.cards[self.current_index]
+        # card structure: (card_id, question, answer, next_review_date)
         self.current_card_id = card[0]
         self.question_label.configure(text=card[1])
         self.answer_label.configure(text=card[2])
@@ -1287,20 +1283,19 @@ class QuizSession(ctk.CTkFrame):
         self.card_start_time = datetime.now()
 
     def show_answer(self):
-        # hide the "show answer" button and reveal the answer and rating options
         self.show_answer_button.pack_forget()
         self.answer_frame.pack(pady=20)
         self.rating_frame.pack(pady=20)
 
     def rate_card_difficulty(self, quality):
-        # calculate the time taken to answer the current card
+        # Calculate time taken for current card.
         card_time = (datetime.now() - self.card_start_time).total_seconds()
-        # treat quality values >= 2 as correct answers
+        # Treat quality >= 2 (Medium, Easy, Very Easy) as correct.
         is_correct = 1 if quality >= 2 else 0
         if is_correct:
             self.correct_count += 1
 
-        # update spaced repetition parameters for the card based on the quality rating
+        # Update spaced repetition with new difficulty mapping.
         self.db.update_spaced_rep(
             user_id=self.user_id,
             card_id=self.current_card_id,
@@ -1309,16 +1304,13 @@ class QuizSession(ctk.CTkFrame):
             is_correct=is_correct
         )
 
-        # move to the next card
         self.current_index += 1
         self.display_card()
 
     def end_quiz(self):
-        # calculate total session time and average time per card
         deck_time = (datetime.now() - self.session_start_time).total_seconds()
         self.total_time = deck_time
         avg_time = deck_time / self.total_cards if self.total_cards > 0 else 0
-        # save the quiz result in the database
         self.db.save_quiz_result(
             user_id=self.user_id,
             deck_id=self.deck_id,
@@ -1330,7 +1322,6 @@ class QuizSession(ctk.CTkFrame):
         self.show_summary()
 
     def show_summary(self):
-        # clear all widgets and display summary stats
         for widget in self.winfo_children():
             widget.destroy()
         summary_frame = ctk.CTkFrame(self, fg_color="#F3F4F6")
@@ -1367,7 +1358,6 @@ class QuizSession(ctk.CTkFrame):
                 font=("Inter", 14, "bold"),
                 text_color="black"
             ).pack(side="left", padx=5)
-        # return to quiz page button
         ctk.CTkButton(
             summary_frame,
             text="Return to Quiz",
@@ -1381,7 +1371,6 @@ class QuizSession(ctk.CTkFrame):
         ).pack(pady=20)
 
     def show_no_cards_message(self):
-        # clear all widgets and show message if no cards are available for review
         for widget in self.winfo_children():
             widget.destroy()
         msg_frame = ctk.CTkFrame(self, fg_color="white")
@@ -1398,6 +1387,9 @@ class QuizSession(ctk.CTkFrame):
             width=200,
             height=40,
             corner_radius=16,
+            fg_color="#F3F4F6",
+            text_color="black",
+            hover_color="#E5E7EB",
             command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
         ).pack(pady=20)
 
