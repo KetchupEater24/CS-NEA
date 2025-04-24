@@ -1276,7 +1276,6 @@ class QuizSession(ctk.CTkFrame):
 
         # hide answer and rating frame and show the "show answer" button
         self.answer_frame.pack_forget()
-        self.interval_help.pack_forget()
         self.rating_frame.pack_forget()
         self.show_answer_button.pack(pady=20)
 

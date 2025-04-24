@@ -1276,7 +1276,6 @@ class QuizSession(ctk.CTkFrame):
 
         # hide answer and rating frame and show the "show answer" button
         self.answer_frame.pack_forget()
-        self.interval_help.pack_forget()
         self.rating_frame.pack_forget()
         self.show_answer_button.pack(pady=20)
 
@@ -1292,7 +1291,7 @@ class QuizSession(ctk.CTkFrame):
         # hide the "show answer" button and reveal the answer and rating options
         self.show_answer_button.pack_forget()
         self.answer_frame.pack(pady=20)
-        # explains what each interval option does and how it works
+            # … just before you create self.rating_frame
         self.interval_help = ctk.CTkLabel(
         self.content,
             text=(
@@ -1308,6 +1307,8 @@ class QuizSession(ctk.CTkFrame):
             wraplength=600,
             justify="left"
             )   
+    # don’t pack it yet – only show it once the answer is revealed:
+    # you’ll pack it alongside the rating buttons in show_answer()
 
         self.rating_frame.pack(pady=20)
 

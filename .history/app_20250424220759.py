@@ -1276,7 +1276,6 @@ class QuizSession(ctk.CTkFrame):
 
         # hide answer and rating frame and show the "show answer" button
         self.answer_frame.pack_forget()
-        self.interval_help.pack_forget()
         self.rating_frame.pack_forget()
         self.show_answer_button.pack(pady=20)
 
@@ -1292,23 +1291,6 @@ class QuizSession(ctk.CTkFrame):
         # hide the "show answer" button and reveal the answer and rating options
         self.show_answer_button.pack_forget()
         self.answer_frame.pack(pady=20)
-        # explains what each interval option does and how it works
-        self.interval_help = ctk.CTkLabel(
-        self.content,
-            text=(
-                "Choose how well you recalled the answer:\n"
-                " • Very Hard → review again in 2 minutes\n"
-                " • Hard → review in 6 minutes\n"
-                " • Medium → review in 10 minutes\n"
-                " • Easy → review tomorrow (1 day)\n"
-                " • Very Easy → review in 3 days"
-            ),
-            font=("Inter", 12),
-            text_color="#4B5563",
-            wraplength=600,
-            justify="left"
-            )   
-
         self.rating_frame.pack(pady=20)
 
     def rate_card_difficulty(self, quality):

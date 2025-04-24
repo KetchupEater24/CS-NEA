@@ -1171,17 +1171,6 @@ class QuizSession(ctk.CTkFrame):
         # header with title, progress, and timer
         self.header = ctk.CTkFrame(self, fg_color="#F3F4F6", height=60)
         self.header.pack(fill="x", pady=(0, 20))
-        # makes an instruction label to tell the user how to answer a card
-        self.instruction_label = ctk.CTkLabel(
-                self, 
-                text="After you view each question, click “Show Answer” and then choose how well you recalled the answer.",
-                font=("Inter", 14),
-                text_color="#1F2937", 
-                wraplength=600,
-                justify="left"
-        )
-        self.instruction_label.pack(fill="x", padx=30, pady=(0,10))
-        
         self.title_label = ctk.CTkLabel(
             self.header, text="Quiz Session", font=("Inter", 18, "bold"), text_color="black"
         )
@@ -1251,6 +1240,17 @@ class QuizSession(ctk.CTkFrame):
         # hide rating frame until answer is shown
         self.rating_frame.pack_forget()
         
+        # makes an instruction label to tell the user how to answer a card
+        self.instruction_label = ctk.CTkLabel(
+                self, 
+                text="After you view each question, click “Show Answer” and then choose how well you recalled the answer.",
+                font=("Inter", 14),
+                text_color="#1F2937", 
+                wraplength=600,
+                justify="left"
+        )
+        self.instruction_label.pack(fill="x", padx=30, pady=(0,10))
+        
 
         # start timer and display the first card
         self.update_timer()
@@ -1276,7 +1276,6 @@ class QuizSession(ctk.CTkFrame):
 
         # hide answer and rating frame and show the "show answer" button
         self.answer_frame.pack_forget()
-        self.interval_help.pack_forget()
         self.rating_frame.pack_forget()
         self.show_answer_button.pack(pady=20)
 
@@ -1292,23 +1291,6 @@ class QuizSession(ctk.CTkFrame):
         # hide the "show answer" button and reveal the answer and rating options
         self.show_answer_button.pack_forget()
         self.answer_frame.pack(pady=20)
-        # explains what each interval option does and how it works
-        self.interval_help = ctk.CTkLabel(
-        self.content,
-            text=(
-                "Choose how well you recalled the answer:\n"
-                " • Very Hard → review again in 2 minutes\n"
-                " • Hard → review in 6 minutes\n"
-                " • Medium → review in 10 minutes\n"
-                " • Easy → review tomorrow (1 day)\n"
-                " • Very Easy → review in 3 days"
-            ),
-            font=("Inter", 12),
-            text_color="#4B5563",
-            wraplength=600,
-            justify="left"
-            )   
-
         self.rating_frame.pack(pady=20)
 
     def rate_card_difficulty(self, quality):
