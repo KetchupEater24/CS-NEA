@@ -1292,24 +1292,6 @@ class QuizSession(ctk.CTkFrame):
             button.pack(side="left", padx=5)
         # hide rating frame until answer is shown
         self.rating_frame.pack_forget()
-        
-        # add interval explanation label (hidden until answer revealed)
-        self.interval_help = ctk.CTkLabel(
-            self.content,
-            text=(
-                "Choose how well you recalled the answer:\n"
-                " • Very Hard → review in 2 minutes\n"
-                " • Hard → review in 6 minutes\n"
-                " • Medium → review in 10 minutes\n"
-                " • Easy → review tomorrow (1 day)\n"
-                " • Very Easy → review in 3 days"
-            ),
-            font=("Inter", 12),
-            text_color="#4B5563",
-            wraplength=600,
-            justify="left"
-        )
-        self.interval_help.pack_forget()
 
         # correct/incorrect buttons to record recall accuracy (shown after rating)
         self.correct_frame = ctk.CTkFrame(self.content, fg_color="transparent")
@@ -1390,14 +1372,12 @@ class QuizSession(ctk.CTkFrame):
         self.show_answer_button.pack_forget()
         self.answer_frame.pack(pady=20)
         # show interval explanation text
-        
         self.interval_help.pack(pady=(0,10))
         self.rating_frame.pack(pady=20)
-        self.correct_frame.pack(padx=20)
 
 
     def record_correctness(self, was_correct):
-        # set correctness
+        # explicitly update correctness only
         if was_correct:
             self.correct_count += 1
         self.db.update_card_correctness(
@@ -1405,9 +1385,10 @@ class QuizSession(ctk.CTkFrame):
             card_id=self.current_card_id,
             is_correct=was_correct
         )
-        # proceed after correctness
-        self.rating_frame.pack_forget()
-        self.correct_frame.pack(pady=10)
+        # proceed to difficulty rating
+        self.correct_frame.pack_forget()
+        self.interval_help.pack(pady=(0,10))
+        self.rating_frame.pack(pady=10)
         
     def rate_card_difficulty(self, quality):
         # calculate the time taken to answer the current card

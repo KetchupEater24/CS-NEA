@@ -1292,24 +1292,6 @@ class QuizSession(ctk.CTkFrame):
             button.pack(side="left", padx=5)
         # hide rating frame until answer is shown
         self.rating_frame.pack_forget()
-        
-        # add interval explanation label (hidden until answer revealed)
-        self.interval_help = ctk.CTkLabel(
-            self.content,
-            text=(
-                "Choose how well you recalled the answer:\n"
-                " • Very Hard → review in 2 minutes\n"
-                " • Hard → review in 6 minutes\n"
-                " • Medium → review in 10 minutes\n"
-                " • Easy → review tomorrow (1 day)\n"
-                " • Very Easy → review in 3 days"
-            ),
-            font=("Inter", 12),
-            text_color="#4B5563",
-            wraplength=600,
-            justify="left"
-        )
-        self.interval_help.pack_forget()
 
         # correct/incorrect buttons to record recall accuracy (shown after rating)
         self.correct_frame = ctk.CTkFrame(self.content, fg_color="transparent")
@@ -1393,7 +1375,6 @@ class QuizSession(ctk.CTkFrame):
         
         self.interval_help.pack(pady=(0,10))
         self.rating_frame.pack(pady=20)
-        self.correct_frame.pack(padx=20)
 
 
     def record_correctness(self, was_correct):

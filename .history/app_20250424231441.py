@@ -1393,7 +1393,6 @@ class QuizSession(ctk.CTkFrame):
         
         self.interval_help.pack(pady=(0,10))
         self.rating_frame.pack(pady=20)
-        self.correct_frame.pack(padx=20)
 
 
     def record_correctness(self, was_correct):

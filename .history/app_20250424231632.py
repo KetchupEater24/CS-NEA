@@ -1389,11 +1389,11 @@ class QuizSession(ctk.CTkFrame):
         # hide the "show answer" button and reveal the answer and rating options
         self.show_answer_button.pack_forget()
         self.answer_frame.pack(pady=20)
+        self.correct_frame.pack(padx=20)
         # show interval explanation text
         
         self.interval_help.pack(pady=(0,10))
         self.rating_frame.pack(pady=20)
-        self.correct_frame.pack(padx=20)
 
 
     def record_correctness(self, was_correct):

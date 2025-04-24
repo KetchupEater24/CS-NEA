@@ -1292,7 +1292,7 @@ class QuizSession(ctk.CTkFrame):
             button.pack(side="left", padx=5)
         # hide rating frame until answer is shown
         self.rating_frame.pack_forget()
-        
+
         # add interval explanation label (hidden until answer revealed)
         self.interval_help = ctk.CTkLabel(
             self.content,
@@ -1311,47 +1311,10 @@ class QuizSession(ctk.CTkFrame):
         )
         self.interval_help.pack_forget()
 
-        # correct/incorrect buttons to record recall accuracy (shown after rating)
-        self.correct_frame = ctk.CTkFrame(self.content, fg_color="transparent")
-        # explain correctness meaning
-        self.correct_help = ctk.CTkLabel(
-            self.correct_frame,
-            text="Confirm if you truly recalled it. “Correct” marks it right, “Incorrect” marks it wrong.",
-            font=("Inter", 12),
-            text_color="#4B5563",
-            wraplength=600,
-            justify="left"
-        )
-        self.correct_help.pack(pady=(0,10))
-        self.correct_button = ctk.CTkButton(
-            self.correct_frame,
-            text="Correct",
-            width=120,
-            height=32,
-            corner_radius=16,
-            fg_color="#D1FAE5",
-            text_color="#065F46",
-            hover_color="#A7F3D0",
-            command=lambda: self.record_correctness(True)
-        )
-        self.correct_button.pack(side="left", padx=5)
-        self.incorrect_button = ctk.CTkButton(
-            self.correct_frame,
-            text="Incorrect",
-            width=120,
-            height=32,
-            corner_radius=16,
-            fg_color="#FEE2E2",
-            text_color="#B91C1C",
-            hover_color="#FECACA",
-            command=lambda: self.record_correctness(False)
-        )
-        self.incorrect_button.pack(side="left", padx=5)
-        self.correct_frame.pack_forget()
-
         # start timer and display the first card
         self.update_timer()
         self.display_card()
+
     def update_timer(self):
         # update the timer label every second
         if not self.timer_label.winfo_exists():
@@ -1390,14 +1353,12 @@ class QuizSession(ctk.CTkFrame):
         self.show_answer_button.pack_forget()
         self.answer_frame.pack(pady=20)
         # show interval explanation text
-        
         self.interval_help.pack(pady=(0,10))
         self.rating_frame.pack(pady=20)
-        self.correct_frame.pack(padx=20)
 
 
     def record_correctness(self, was_correct):
-        # set correctness
+        # explicitly update correctness only
         if was_correct:
             self.correct_count += 1
         self.db.update_card_correctness(
@@ -1405,9 +1366,10 @@ class QuizSession(ctk.CTkFrame):
             card_id=self.current_card_id,
             is_correct=was_correct
         )
-        # proceed after correctness
-        self.rating_frame.pack_forget()
-        self.correct_frame.pack(pady=10)
+        # proceed to difficulty rating
+        self.correct_frame.pack_forget()
+        self.interval_help.pack(pady=(0,10))
+        self.rating_frame.pack(pady=10)
         
     def rate_card_difficulty(self, quality):
         # calculate the time taken to answer the current card
