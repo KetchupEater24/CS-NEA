@@ -1380,7 +1380,8 @@ class QuizSession(ctk.CTkFrame):
             user_id=self.user_id,
             card_id=self.current_card_id,
             quality=quality,
-            time_taken=card_time
+            time_taken=card_time,
+            is_correct=is_correct
         )
 
         # move to the next card

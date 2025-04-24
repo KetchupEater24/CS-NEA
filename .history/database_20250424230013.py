@@ -487,10 +487,9 @@ class Database:
             next_review_time = datetime.now() + timedelta(seconds=new_interval)
         else:
             mapping_seconds = {3: 300, 4: 600}
-            new_interval = mapping_seconds.get(quality, 300)
+            seconds = mapping_seconds.get(quality, 300)
+            next_review_time = datetime.now() + timedelta(seconds=seconds)
             repetition += 1
-            next_review_time = datetime.now() + timedelta(seconds=new_interval)
-
 
 
         # update the ef (easiness factor) based on quality and ensure it does not fall below 1.3

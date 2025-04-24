@@ -1148,6 +1148,9 @@ class QuizPage(BasePage):
         QuizSession(self.master, self.user_id, selected_deck_id, self.switch_page, db=self.db)
 
 
+from datetime import datetime
+import customtkinter as ctk
+
 class QuizSession(ctk.CTkFrame):
     def __init__(self, master, user_id, deck_id, switch_page, db):
         super().__init__(master, corner_radius=0, fg_color="white")
@@ -1219,7 +1222,7 @@ class QuizSession(ctk.CTkFrame):
             fg_color="#F3F4F6", text_color="black", hover_color="#E5E7EB", command=self.show_answer
         )
         self.show_answer_button.pack(pady=20)
-        
+
         # correct/incorrect buttons to record recall accuracy
         self.correct_frame = ctk.CTkFrame(self.content, fg_color="transparent")
         # ask if the user recalled correctly
@@ -1255,45 +1258,8 @@ class QuizSession(ctk.CTkFrame):
         )
         self.incorrect_button.pack(side="left", padx=5)
         self.correct_frame.pack_forget()
-        
-        
 
-        # difficulty rating options:
-        self.rating_frame = ctk.CTkFrame(self.content, fg_color="transparent")
-        rating_options = [
-            ("Very Hard (2 mins)", 0),
-            ("Hard (6 mins)", 1),
-            ("Medium (10 mins)", 2),
-            ("Easy (1 day)", 3),
-            ("Very Easy (3 days)", 4)
-        ]
-        for text, quality in rating_options:
-            if quality in (0, 1):
-                # for very hard or hard, use red styling
-                button_fg = "#FEE2E2"
-                button_text = "#DC2626"
-                button_hover = "#FECACA"
-            else:
-                # for medium, easy, or very easy, use gray styling
-                button_fg = "#F3F4F6"
-                button_text = "black"
-                button_hover = "#E5E7EB"
-            button = ctk.CTkButton(
-                self.rating_frame,
-                text=text,
-                width=120,
-                height=32,
-                corner_radius=16,
-                fg_color=button_fg,
-                text_color=button_text,
-                hover_color=button_hover,
-                command=lambda q=quality: self.rate_card_difficulty(q)
-            )
-            button.pack(side="left", padx=5)
-        # hide rating frame until answer is shown
-        self.rating_frame.pack_forget()
-
-        # add interval explanation label (hidden until answer revealed)
+        # explain intervals (hidden until needed)
         self.interval_help = ctk.CTkLabel(
             self.content,
             text=(
@@ -1311,7 +1277,35 @@ class QuizSession(ctk.CTkFrame):
         )
         self.interval_help.pack_forget()
 
-        # start timer and display the first card
+        # difficulty rating options (hidden until after correctness)
+        self.rating_frame = ctk.CTkFrame(self.content, fg_color="transparent")
+        rating_options = [
+            ("Very Hard (2 mins)", 0),
+            ("Hard (6 mins)", 1),
+            ("Medium (10 mins)", 2),
+            ("Easy (1 day)", 3),
+            ("Very Easy (3 days)", 4)
+        ]
+        for text, quality in rating_options:
+            if quality in (0, 1):
+                button_fg, button_text, button_hover = "#FEE2E2", "#DC2626", "#FECACA"
+            else:
+                button_fg, button_text, button_hover = "#F3F4F6", "black", "#E5E7EB"
+            btn = ctk.CTkButton(
+                self.rating_frame,
+                text=text,
+                width=120,
+                height=32,
+                corner_radius=16,
+                fg_color=button_fg,
+                text_color=button_text,
+                hover_color=button_hover,
+                command=lambda q=quality: self.rate_card_difficulty(q)
+            )
+            btn.pack(side="left", padx=5)
+        self.rating_frame.pack_forget()
+
+        # start timer and show first card
         self.update_timer()
         self.display_card()
 
@@ -1321,9 +1315,8 @@ class QuizSession(ctk.CTkFrame):
             return
         elapsed = datetime.now() - self.session_start_time
         total_seconds = int(elapsed.total_seconds())
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        seconds = total_seconds % 60
+        hours, rem = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(rem, 60)
         self.timer_label.configure(text=f"Time Elapsed: {hours:02d}:{minutes:02d}:{seconds:02d}")
         self.after(1000, self.update_timer)
 
@@ -1339,60 +1332,48 @@ class QuizSession(ctk.CTkFrame):
         self.interval_help.pack_forget()
         self.rating_frame.pack_forget()
         self.show_answer_button.pack(pady=20)
-        
-        # get current card (in a tuple with card_id, question, answer, next_review_date)
+
+        # load current card
         card = self.cards[self.current_card]
         self.current_card_id = card[0]
         self.question_label.configure(text=card[1])
         self.answer_label.configure(text=card[2])
-        self.progress_label.configure(text=f"Card {self.current_card + 1}/{self.total_cards}")
+        self.progress_label.configure(text=f"Card {self.current_card+1}/{self.total_cards}")
         self.card_start_time = datetime.now()
 
     def show_answer(self):
-        # hide the "show answer" button and reveal the answer and rating options
+        # reveal answer and correctness buttons
         self.show_answer_button.pack_forget()
         self.answer_frame.pack(pady=20)
-        # show interval explanation text
-        self.interval_help.pack(pady=(0,10))
-        self.rating_frame.pack(pady=20)
-
+        self.correct_frame.pack(pady=10)
 
     def record_correctness(self, was_correct):
-        # explicitly update correctness only
+        # record if the answer was correct
+        self.is_correct = was_correct
         if was_correct:
             self.correct_count += 1
-        self.db.update_card_correctness(
-            user_id=self.user_id,
-            card_id=self.current_card_id,
-            is_correct=was_correct
-        )
-        # proceed to difficulty rating
+        # move on to difficulty rating
         self.correct_frame.pack_forget()
         self.interval_help.pack(pady=(0,10))
         self.rating_frame.pack(pady=10)
-        
-    def rate_card_difficulty(self, quality):
-        # calculate the time taken to answer the current card
-        card_time = (datetime.now() - self.card_start_time).total_seconds()
 
-        # update spaced repetition algorithm for the card based on the difficulty rating
+    def rate_card_difficulty(self, quality):
+        # calculate time taken and update spaced repetition with explicit correctness
+        card_time = (datetime.now() - self.card_start_time).total_seconds()
         self.db.update_spaced_rep(
             user_id=self.user_id,
             card_id=self.current_card_id,
             quality=quality,
-            time_taken=card_time
+            time_taken=card_time,
+            is_correct=self.is_correct
         )
-
-        # move to the next card
         self.current_card += 1
         self.display_card()
 
     def end_quiz(self):
-        # calculate total quiz session time and average time per card
+        # calculate totals and save quiz result
         deck_time = (datetime.now() - self.session_start_time).total_seconds()
-        self.total_time = deck_time
-        avg_time = deck_time / self.total_cards if self.total_cards > 0 else 0
-        # save the quiz result in the database
+        avg_time = deck_time / self.total_cards if self.total_cards else 0
         self.db.save_quiz_result(
             user_id=self.user_id,
             deck_id=self.deck_id,
@@ -1403,8 +1384,9 @@ class QuizSession(ctk.CTkFrame):
         )
         self.show_summary()
 
+    # show_summary and show_no_cards_message remain unchanged
     def show_summary(self):
-        # clear all widgets and display summary stats for quiz
+        # clear widgets and display summary stats for quiz
         for widget in self.winfo_children():
             widget.destroy()
         summary_frame = ctk.CTkFrame(self, fg_color="#F3F4F6")
@@ -1416,65 +1398,7 @@ class QuizSession(ctk.CTkFrame):
             text_color="black"
         ).pack(pady=20)
         total_cards = self.total_cards
-        wrong = total_cards - self.correct_count
-        accuracy = (self.correct_count / total_cards) * 100 if total_cards > 0 else 0
-        stats = [
-            ("Total Cards", f"{total_cards}"),
-            ("Correct Answers", f"{self.correct_count}"),
-            ("Wrong Answers", f"{wrong}"),
-            ("Accuracy", f"{accuracy:.1f}%"),
-            ("Total Time", f"{self.total_time:.1f}s"),
-            ("Avg Time/Card", f"{(self.total_time / total_cards):.1f}s" if total_cards else "0s")
-        ]
-        for label, value in stats:
-            stat_frame = ctk.CTkFrame(summary_frame, fg_color="transparent")
-            stat_frame.pack(pady=10)
-            ctk.CTkLabel(
-                stat_frame,
-                text=label,
-                font=("Inter", 14),
-                text_color="#4B5563"
-            ).pack(side="left", padx=5)
-            ctk.CTkLabel(
-                stat_frame,
-                text=value,
-                font=("Inter", 14, "bold"),
-                text_color="black"
-            ).pack(side="left", padx=5)
-        
-        # return to quiz page button
-        ctk.CTkButton(
-            summary_frame,
-            text="Return to Quiz",
-            width=200,
-            height=40,
-            corner_radius=16,
-            fg_color="#F3F4F6",
-            text_color="black",
-            hover_color="#E5E7EB",
-            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
-        ).pack(pady=20)
-
-    def show_no_cards_message(self):
-        # clear all widgets and show message if no cards are available for review
-        for widget in self.winfo_children():
-            widget.destroy()
-        msg_frame = ctk.CTkFrame(self, fg_color="white")
-        msg_frame.pack(fill="both", expand=True, padx=30, pady=30)
-        ctk.CTkLabel(
-            msg_frame,
-            text="No cards available for review!",
-            font=("Inter", 18, "bold"),
-            text_color="black"
-        ).pack(expand=True)
-        ctk.CTkButton(
-            msg_frame,
-            text="Return to Quiz",
-            width=200,
-            height=40,
-            corner_radius=16,
-            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
-        ).pack(pady=20)
+        wrong = total_cards - self.correc
 
 
 class AnalyticsPage(BasePage):

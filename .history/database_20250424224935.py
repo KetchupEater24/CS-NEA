@@ -441,7 +441,7 @@ class Database:
 
     # updates spaced repetition data for a card based on quality rating (difficulty the user selected during quiz session)
     # and time taken and returns new review time info
-    def update_spaced_rep(self, user_id, card_id, quality, time_taken):
+    def update_spaced_rep(self, user_id, card_id, quality, time_taken, is_correct):
         # retrieve current spaced repetition record for the user and card
         self.cursor.execute("""
             SELECT repetition, interval, ef
@@ -464,34 +464,20 @@ class Database:
             """, (user_id, card_id, repetition, old_interval, ef, now_str, time_taken))
             self.conn.commit()
 
-        # # if the quality is low (2 or less), schedule review in minutes and reset repetition count
-        # if quality <= 2:
-        #     mapping_minutes = {0: 2, 1: 6, 2: 10}
-        #     new_interval = mapping_minutes.get(quality, 10)
-        #     repetition = 0  # reset repetition for minute intervals
-        #     next_review_time = datetime.now() + timedelta(minutes=new_interval)
-        # # for higher quality responses, schedule review in days and increment repetition count
-        # else:
-        #     mapping_days = {3: 1, 4: 3}
-        #     days = mapping_days.get(quality, 1)
-        #     next_day = (datetime.now() + timedelta(days=days)).replace(hour=0, minute=0, second=0, microsecond=0)
-        #     new_interval = int((next_day - datetime.now()).total_seconds() // 60)
-        #     next_review_time = next_day
-        #     repetition += 1
-        
-        # Below is the same code as above but with adjusted intervals so cards are available for review after the appropiate interval
+        # if the quality is low (2 or less), schedule review in minutes and reset repetition count
         if quality <= 2:
-            mapping_seconds = {0: 5, 1: 10, 2: 120}
-            new_interval = mapping_seconds.get(quality, 120)
-            repetition = 0  # reset repetition for second intervals
-            next_review_time = datetime.now() + timedelta(seconds=new_interval)
+            mapping_minutes = {0: 2, 1: 6, 2: 10}
+            new_interval = mapping_minutes.get(quality, 10)
+            repetition = 0  # reset repetition for minute intervals
+            next_review_time = datetime.now() + timedelta(minutes=new_interval)
+        # for higher quality responses, schedule review in days and increment repetition count
         else:
-            mapping_seconds = {3: 300, 4: 600}
-            new_interval = mapping_seconds.get(quality, 300)
+            mapping_days = {3: 1, 4: 3}
+            days = mapping_days.get(quality, 1)
+            next_day = (datetime.now() + timedelta(days=days)).replace(hour=0, minute=0, second=0, microsecond=0)
+            new_interval = int((next_day - datetime.now()).total_seconds() // 60)
+            next_review_time = next_day
             repetition += 1
-            next_review_time = datetime.now() + timedelta(seconds=new_interval)
-
-
 
         # update the ef (easiness factor) based on quality and ensure it does not fall below 1.3
         new_ef = ef + (0.1 - (4 - quality) * (0.08 + (4 - quality) * 0.02))

@@ -480,6 +480,7 @@ class Database:
         #     repetition += 1
         
         # Below is the same code as above but with adjusted intervals so cards are available for review after the appropiate interval
+        # if quality <= 2, schedule review in seconds and reset repetition count
         if quality <= 2:
             mapping_seconds = {0: 5, 1: 10, 2: 120}
             new_interval = mapping_seconds.get(quality, 120)
@@ -487,10 +488,9 @@ class Database:
             next_review_time = datetime.now() + timedelta(seconds=new_interval)
         else:
             mapping_seconds = {3: 300, 4: 600}
-            new_interval = mapping_seconds.get(quality, 300)
+            seconds = mapping_seconds.get(quality, 300)
+            next_review_time = datetime.now() + timedelta(seconds=seconds)
             repetition += 1
-            next_review_time = datetime.now() + timedelta(seconds=new_interval)
-
 
 
         # update the ef (easiness factor) based on quality and ensure it does not fall below 1.3

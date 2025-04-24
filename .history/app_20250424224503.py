@@ -1370,17 +1370,21 @@ class QuizSession(ctk.CTkFrame):
         self.correct_frame.pack_forget()
         self.interval_help.pack(pady=(0,10))
         self.rating_frame.pack(pady=10)
-        
     def rate_card_difficulty(self, quality):
         # calculate the time taken to answer the current card
         card_time = (datetime.now() - self.card_start_time).total_seconds()
+        # treat quality values >= 2 as correct answers
+        is_correct = 1 if quality >= 2 else 0
+        if is_correct:
+            self.correct_count += 1
 
         # update spaced repetition algorithm for the card based on the difficulty rating
         self.db.update_spaced_rep(
             user_id=self.user_id,
             card_id=self.current_card_id,
             quality=quality,
-            time_taken=card_time
+            time_taken=card_time,
+            is_correct=is_correct
         )
 
         # move to the next card

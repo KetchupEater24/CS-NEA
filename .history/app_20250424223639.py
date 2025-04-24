@@ -1257,6 +1257,9 @@ class QuizSession(ctk.CTkFrame):
         self.correct_frame.pack_forget()
         
         
+        
+        
+        
 
         # difficulty rating options:
         self.rating_frame = ctk.CTkFrame(self.content, fg_color="transparent")
@@ -1333,13 +1336,12 @@ class QuizSession(ctk.CTkFrame):
             self.end_quiz()
             return
 
-        # hide answer, correctness, interval and rating UI
+        # hide answer and rating frame and show the "show answer" button
         self.answer_frame.pack_forget()
-        self.correct_frame.pack_forget()
         self.interval_help.pack_forget()
         self.rating_frame.pack_forget()
         self.show_answer_button.pack(pady=20)
-        
+
         # get current card (in a tuple with card_id, question, answer, next_review_date)
         card = self.cards[self.current_card]
         self.current_card_id = card[0]
@@ -1356,31 +1358,21 @@ class QuizSession(ctk.CTkFrame):
         self.interval_help.pack(pady=(0,10))
         self.rating_frame.pack(pady=20)
 
-
-    def record_correctness(self, was_correct):
-        # explicitly update correctness only
-        if was_correct:
-            self.correct_count += 1
-        self.db.update_card_correctness(
-            user_id=self.user_id,
-            card_id=self.current_card_id,
-            is_correct=was_correct
-        )
-        # proceed to difficulty rating
-        self.correct_frame.pack_forget()
-        self.interval_help.pack(pady=(0,10))
-        self.rating_frame.pack(pady=10)
-        
     def rate_card_difficulty(self, quality):
         # calculate the time taken to answer the current card
         card_time = (datetime.now() - self.card_start_time).total_seconds()
+        # treat quality values >= 2 as correct answers
+        is_correct = 1 if quality >= 2 else 0
+        if is_correct:
+            self.correct_count += 1
 
         # update spaced repetition algorithm for the card based on the difficulty rating
         self.db.update_spaced_rep(
             user_id=self.user_id,
             card_id=self.current_card_id,
             quality=quality,
-            time_taken=card_time
+            time_taken=card_time,
+            is_correct=is_correct
         )
 
         # move to the next card
