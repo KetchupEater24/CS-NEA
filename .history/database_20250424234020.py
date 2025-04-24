@@ -196,9 +196,11 @@ class Database:
         if result:
             return {"name": result[0], "card_count": result[1]}
         return {"name": "", "card_count": 0}
-    
-    # returns the deck name with the corresponding deck_id
     def get_deck_name(self, deck_id):
+        """
+        Fetch just the deck’s name for the given ID.
+        Returns the name string, or empty string if not found.
+        """
         self.cursor.execute(
             "SELECT deck_name FROM decks WHERE deck_id = ?",
             (deck_id,)

@@ -1147,6 +1147,7 @@ class QuizPage(BasePage):
         # start a quiz session with the selected deck, passing along the db connection
         QuizSession(self.master, self.user_id, selected_deck_id, self.switch_page, db=self.db)
 
+
 class QuizSession(ctk.CTkFrame):
     def __init__(self, master, user_id, deck_id, switch_page, db):
         super().__init__(master, corner_radius=0, fg_color="white")
@@ -1162,8 +1163,6 @@ class QuizSession(ctk.CTkFrame):
             self.show_no_cards_message()
             return
 
-        # Get deck name
-        deck_name = self.db.get_deck_name(self.deck_id)
         self.total_cards = len(self.cards)
         self.correct_count = 0
         self.session_start_time = datetime.now()
@@ -1172,105 +1171,95 @@ class QuizSession(ctk.CTkFrame):
         # header with title, progress, and timer
         self.header = ctk.CTkFrame(self, fg_color="#F3F4F6", height=60)
         self.header.pack(fill="x", pady=(0, 20))
-        
-        # Center align the header items with a center frame
-        self.header_center = ctk.CTkFrame(self.header, fg_color="transparent")
-        self.header_center.pack(expand=True, fill="x")
-        
         self.title_label = ctk.CTkLabel(
-            self.header_center, text=f"Quiz Session - {deck_name}", font=("Inter", 18, "bold"), text_color="black"
+            self.header, text="Quiz Session", font=("Inter", 18, "bold"), text_color="black"
         )
         self.title_label.pack(side="left", padx=30)
         self.progress_label = ctk.CTkLabel(
-            self.header_center, text=f"Card 1/{self.total_cards}", font=("Inter", 14), text_color="#4B5563"
+            self.header, text=f"Card 1/{self.total_cards}", font=("Inter", 14), text_color="#4B5563"
         )
         self.progress_label.pack(side="right", padx=30)
         self.timer_label = ctk.CTkLabel(
-            self.header_center, text="Time Elapsed: 00:00:00", font=("Inter", 14), text_color="#4B5563"
+            self.header, text="Time Elapsed: 00:00:00", font=("Inter", 14), text_color="#4B5563"
         )
         self.timer_label.pack(side="right", padx=30)
 
         # makes an instruction label to tell the user how to answer a card
         self.instruction_label = ctk.CTkLabel(
             self,
-            text="After you view each question, click \"Show Answer\" and then rate difficulty and accuracy of your recall.",
+            text=(
+                "After you view each question, click “Show Answer” \
+"
+                "and then choose how well you recalled the answer."
+            ),
             font=("Inter", 14),
             text_color="#1F2937",
-            wraplength=800,
-            justify="center"
+            wraplength=600,
+            justify="left"
         )
-
         self.instruction_label.pack(fill="x", padx=30, pady=(0,10))
 
-        # main content for question and answer - center align all content
+        # main content for question and answer
         self.content = ctk.CTkFrame(self, fg_color="white")
         self.content.pack(fill="both", expand=True, padx=30, pady=20)
-        
-        # Question section with clear header - center aligned
-        self.question_section = ctk.CTkFrame(self.content, fg_color="white")
-        self.question_section.pack(fill="x", pady=(0, 10))
-        
-        self.question_header = ctk.CTkLabel(
-            self.question_section, text="QUESTION", font=("Inter", 16, "bold"), text_color="#4B5563"
-        )
-        self.question_header.pack(anchor="center")
-        
-        # Separator line
-        self.question_separator = ctk.CTkFrame(self.question_section, height=1, fg_color="#E5E7EB")
-        self.question_separator.pack(fill="x", pady=5)
-        
         self.question_label = ctk.CTkLabel(
-            self.question_section, text="", font=("Inter", 16), text_color="black", wraplength=600, justify="center"
+            self.content, text="", font=("Inter", 16), text_color="black", wraplength=600
         )
-        self.question_label.pack(anchor="center", pady=10)
+        self.question_label.pack(pady=20)
 
-        # Answer section with clear header (initially hidden) - center aligned
-        self.answer_frame = ctk.CTkFrame(self.content, fg_color="white")
-        
-        self.answer_header = ctk.CTkLabel(
-            self.answer_frame, text="ANSWER", font=("Inter", 16, "bold"), text_color="#4B5563"
-        )
-        self.answer_header.pack(anchor="center")
-        
-        # Separator line
-        self.answer_separator = ctk.CTkFrame(self.answer_frame, height=1, fg_color="#E5E7EB")
-        self.answer_separator.pack(fill="x", pady=5)
-        
+        # answer area (initially hidden)
+        self.answer_frame = ctk.CTkFrame(self.content, fg_color="transparent")
         self.answer_label = ctk.CTkLabel(
-            self.answer_frame, text="", font=("Inter", 16), text_color="black", wraplength=600, justify="center"
+            self.answer_frame, text="", font=("Inter", 16), text_color="black", wraplength=600
         )
-        self.answer_label.pack(anchor="center", pady=10)
+        self.answer_label.pack(pady=20)
 
-        # Show answer button in its own frame - center aligned
-        self.button_frame = ctk.CTkFrame(self.content, fg_color="transparent")
-        self.button_frame.pack(fill="x", pady=20)
-        
         self.show_answer_button = ctk.CTkButton(
-            self.button_frame, text="Show Answer", width=120, height=32, corner_radius=16,
+            self.content, text="Show Answer", width=120, height=32, corner_radius=16,
             fg_color="#F3F4F6", text_color="black", hover_color="#E5E7EB", command=self.show_answer
         )
-        self.show_answer_button.pack(anchor="center")
+        self.show_answer_button.pack(pady=20)
         
-        # Rating section with "DIFFICULTY" header - renamed from "RECALL QUALITY"
-        self.rating_section = ctk.CTkFrame(self.content, fg_color="white")
-        
-        self.rating_header = ctk.CTkLabel(
-            self.rating_section, text="DIFFICULTY", font=("Inter", 16, "bold"), text_color="#4B5563"
+        # correct/incorrect buttons to record recall accuracy
+        self.correct_frame = ctk.CTkFrame(self.content, fg_color="transparent")
+        # ask if the user recalled correctly
+        self.correct_help = ctk.CTkLabel(
+            self.correct_frame,
+            text="Did you recall the answer correctly?",
+            font=("Inter", 12),
+            text_color="#4B5563"
         )
-        self.rating_header.pack(anchor="center")
+        self.correct_help.pack(pady=(0,10))
+        self.correct_button = ctk.CTkButton(
+            self.correct_frame,
+            text="Correct",
+            width=120,
+            height=32,
+            corner_radius=16,
+            fg_color="#D1FAE5",
+            text_color="#065F46",
+            hover_color="#A7F3D0",
+            command=lambda: self.record_correctness(True)
+        )
+        self.correct_button.pack(side="left", padx=5)
+        self.incorrect_button = ctk.CTkButton(
+            self.correct_frame,
+            text="Incorrect",
+            width=120,
+            height=32,
+            corner_radius=16,
+            fg_color="#FEE2E2",
+            text_color="#B91C1C",
+            hover_color="#FECACA",
+            command=lambda: self.record_correctness(False)
+        )
+        self.incorrect_button.pack(side="left", padx=5)
+        self.correct_frame.pack_forget()
         
-        # Separator line
-        self.rating_separator = ctk.CTkFrame(self.rating_section, height=1, fg_color="#E5E7EB")
-        self.rating_separator.pack(fill="x", pady=5)
+        
 
-        # difficulty rating options - center aligned
-        self.rating_frame = ctk.CTkFrame(self.rating_section, fg_color="transparent")
-        self.rating_frame.pack(pady=10)
-        
-        # Center container for rating buttons
-        self.rating_center = ctk.CTkFrame(self.rating_frame, fg_color="transparent")
-        self.rating_center.pack(expand=True, anchor="center")
-        
+        # difficulty rating options:
+        self.rating_frame = ctk.CTkFrame(self.content, fg_color="transparent")
         rating_options = [
             ("Very Hard (2 mins)", 0),
             ("Hard (6 mins)", 1),
@@ -1290,7 +1279,7 @@ class QuizSession(ctk.CTkFrame):
                 button_text = "black"
                 button_hover = "#E5E7EB"
             button = ctk.CTkButton(
-                self.rating_center,
+                self.rating_frame,
                 text=text,
                 width=120,
                 height=32,
@@ -1301,10 +1290,12 @@ class QuizSession(ctk.CTkFrame):
                 command=lambda q=quality: self.rate_card_difficulty(q)
             )
             button.pack(side="left", padx=5)
+        # hide rating frame until answer is shown
+        self.rating_frame.pack_forget()
         
-        # add interval explanation label (hidden until answer revealed) - center aligned
+        # add interval explanation label (hidden until answer revealed)
         self.interval_help = ctk.CTkLabel(
-            self.rating_section,
+            self.content,
             text=(
                 "Choose how well you recalled the answer:\n"
                 " • Very Hard → review in 2 minutes\n"
@@ -1316,46 +1307,24 @@ class QuizSession(ctk.CTkFrame):
             font=("Inter", 12),
             text_color="#4B5563",
             wraplength=600,
-            justify="center"
+            justify="left"
         )
-        self.interval_help.pack(pady=10)
-        
-        # hide the entire rating section initially
-        self.rating_section.pack_forget()
+        self.interval_help.pack_forget()
 
-        # NEW: Add "CORRECTNESS" section
-        self.correctness_section = ctk.CTkFrame(self.content, fg_color="white")
-        
-        self.correctness_header = ctk.CTkLabel(
-            self.correctness_section, text="CORRECTNESS", font=("Inter", 16, "bold"), text_color="#4B5563"
-        )
-        self.correctness_header.pack(anchor="center")
-        
-        # Separator line
-        self.correctness_separator = ctk.CTkFrame(self.correctness_section, height=1, fg_color="#E5E7EB")
-        self.correctness_separator.pack(fill="x", pady=5)
-        
-        # correct/incorrect buttons to record recall accuracy - center aligned
-        self.correct_frame = ctk.CTkFrame(self.correctness_section, fg_color="transparent")
-        self.correct_frame.pack(pady=10)
-        
-        # Center container for correct/incorrect buttons
-        self.correct_center = ctk.CTkFrame(self.correct_frame, fg_color="transparent")
-        self.correct_center.pack(expand=True, anchor="center")
-        
-        # explain correctness meaning - center aligned
+        # correct/incorrect buttons to record recall accuracy (shown after rating)
+        self.correct_frame = ctk.CTkFrame(self.content, fg_color="transparent")
+        # explain correctness meaning
         self.correct_help = ctk.CTkLabel(
             self.correct_frame,
-            text="Confirm if you truly recalled it. \"Correct\" marks it right, \"Incorrect\" marks it wrong.",
+            text="Confirm if you truly recalled it. “Correct” marks it right, “Incorrect” marks it wrong.",
             font=("Inter", 12),
             text_color="#4B5563",
             wraplength=600,
-            justify="center"
+            justify="left"
         )
         self.correct_help.pack(pady=(0,10))
-        
         self.correct_button = ctk.CTkButton(
-            self.correct_center,
+            self.correct_frame,
             text="Correct",
             width=120,
             height=32,
@@ -1366,9 +1335,8 @@ class QuizSession(ctk.CTkFrame):
             command=lambda: self.record_correctness(True)
         )
         self.correct_button.pack(side="left", padx=5)
-        
         self.incorrect_button = ctk.CTkButton(
-            self.correct_center,
+            self.correct_frame,
             text="Incorrect",
             width=120,
             height=32,
@@ -1379,14 +1347,11 @@ class QuizSession(ctk.CTkFrame):
             command=lambda: self.record_correctness(False)
         )
         self.incorrect_button.pack(side="left", padx=5)
-        
-        # Hide correctness section initially
-        self.correctness_section.pack_forget()
+        self.correct_frame.pack_forget()
 
         # start timer and display the first card
         self.update_timer()
         self.display_card()
-        
     def update_timer(self):
         # update the timer label every second
         if not self.timer_label.winfo_exists():
@@ -1407,10 +1372,10 @@ class QuizSession(ctk.CTkFrame):
 
         # hide answer, correctness, interval and rating UI
         self.answer_frame.pack_forget()
-        self.rating_section.pack_forget()
-        self.correctness_section.pack_forget()
-        self.button_frame.pack(fill="x", pady=20)
-        self.show_answer_button.pack(anchor="center")
+        self.correct_frame.pack_forget()
+        self.interval_help.pack_forget()
+        self.rating_frame.pack_forget()
+        self.show_answer_button.pack(pady=20)
         
         # get current card (in a tuple with card_id, question, answer, next_review_date)
         card = self.cards[self.current_card]
@@ -1423,11 +1388,13 @@ class QuizSession(ctk.CTkFrame):
     def show_answer(self):
         # hide the "show answer" button and reveal the answer and rating options
         self.show_answer_button.pack_forget()
-        self.answer_frame.pack(fill="x", pady=(20, 10))
+        self.answer_frame.pack(pady=20)
+        # show interval explanation text
         
-        # show rating section with explanation
-        self.rating_section.pack(fill="x", pady=(10, 0))
-        self.correctness_section.pack(fill="x", pady=(10, 0))
+        self.interval_help.pack(pady=(0,10))
+        self.rating_frame.pack(pady=20)
+        self.correct_frame.pack(padx=20)
+
 
     def record_correctness(self, was_correct):
         # set correctness
@@ -1451,7 +1418,19 @@ class QuizSession(ctk.CTkFrame):
             quality=quality,
             time_taken=card_time
         )
-        
+        # show status message
+        if self.status_label:
+            try: self.status_label.pack_forget()
+            except: pass
+        self.status_label = ctk.CTkLabel(
+            self.content,
+            text="interval saved, now click correct/incorrect below",
+            font=("Inter", 12),
+            text_color="#4B5563",
+            wraplength=600,
+            justify="left"
+        )
+        self.status_label.pack(pady=(0,10))
     def end_quiz(self):
         # calculate total quiz session time and average time per card
         deck_time = (datetime.now() - self.session_start_time).total_seconds()
@@ -1480,11 +1459,6 @@ class QuizSession(ctk.CTkFrame):
             font=("Inter", 24, "bold"),
             text_color="black"
         ).pack(pady=20)
-        
-        # Center align the stats
-        stats_frame = ctk.CTkFrame(summary_frame, fg_color="transparent")
-        stats_frame.pack(expand=True, fill="x", anchor="center")
-        
         total_cards = self.total_cards
         wrong = total_cards - self.correct_count
         accuracy = (self.correct_count / total_cards) * 100 if total_cards > 0 else 0
@@ -1496,10 +1470,9 @@ class QuizSession(ctk.CTkFrame):
             ("Total Time", f"{self.total_time:.1f}s"),
             ("Avg Time/Card", f"{(self.total_time / total_cards):.1f}s" if total_cards else "0s")
         ]
-        
         for label, value in stats:
-            stat_frame = ctk.CTkFrame(stats_frame, fg_color="transparent")
-            stat_frame.pack(pady=10, anchor="center")
+            stat_frame = ctk.CTkFrame(summary_frame, fg_color="transparent")
+            stat_frame.pack(pady=10)
             ctk.CTkLabel(
                 stat_frame,
                 text=label,
@@ -1513,12 +1486,9 @@ class QuizSession(ctk.CTkFrame):
                 text_color="black"
             ).pack(side="left", padx=5)
         
-        # return to quiz page button - center aligned
-        button_frame = ctk.CTkFrame(summary_frame, fg_color="transparent")
-        button_frame.pack(fill="x", pady=20)
-        
+        # return to quiz page button
         ctk.CTkButton(
-            button_frame,
+            summary_frame,
             text="Return to Quiz",
             width=200,
             height=40,
@@ -1527,7 +1497,7 @@ class QuizSession(ctk.CTkFrame):
             text_color="black",
             hover_color="#E5E7EB",
             command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
-        ).pack(pady=20, anchor="center")
+        ).pack(pady=20)
 
     def show_no_cards_message(self):
         # clear all widgets and show message if no cards are available for review
@@ -1541,19 +1511,15 @@ class QuizSession(ctk.CTkFrame):
             font=("Inter", 18, "bold"),
             text_color="black"
         ).pack(expand=True)
-        
-        # Center align the button
-        button_frame = ctk.CTkFrame(msg_frame, fg_color="transparent")
-        button_frame.pack(fill="x", pady=20)
-        
         ctk.CTkButton(
-            button_frame,
+            msg_frame,
             text="Return to Quiz",
             width=200,
             height=40,
             corner_radius=16,
             command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
-        ).pack(pady=20, anchor="center")
+        ).pack(pady=20)
+
 
 class AnalyticsPage(BasePage):
     # initialises analytics page as a subclass of basepage (inheritance)
