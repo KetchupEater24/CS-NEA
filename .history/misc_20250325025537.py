@@ -1,4 +1,3 @@
-# external imports
 import random
 
 # MiscFunctions contains Miscellaneous functions

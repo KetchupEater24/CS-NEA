@@ -1,4 +1,3 @@
-# external imports
 import customtkinter as ctk
 from tkinter import messagebox
 from PIL import Image

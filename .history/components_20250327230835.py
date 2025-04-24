@@ -1,7 +1,5 @@
 # external Imports
 import customtkinter as ctk
-
-# my imports
 from sidebar import Sidebar
 
 # dialog is a small window that pops up on top of the main window

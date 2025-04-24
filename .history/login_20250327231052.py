@@ -7,7 +7,7 @@ from tkinter import messagebox
 from app import DecksPage
 
 
-class LoginPage(ctk.CTkFrame):  
+class LoginPage(ctk.CTkFrame):
     # initialises the login page as a subclass of CTkFrame (inheritance)
     def __init__(self, master, db):
         super().__init__(master, fg_color="#FFFFFF")

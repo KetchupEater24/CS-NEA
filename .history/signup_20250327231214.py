@@ -1,46 +1,55 @@
-# external imports
 import customtkinter as ctk
+from app import DecksPage
 from PIL import Image
 from tkinter import messagebox
 
-# my imports
-from app import DecksPage
-
-
-class LoginPage(ctk.CTkFrame):  
-    # initialises the login page as a subclass of CTkFrame (inheritance)
+class SignupPage(ctk.CTkFrame):
+    # initialises the signup page as a subclass of CTkFrame (inheritance)
     def __init__(self, master, db):
         super().__init__(master, fg_color="#FFFFFF")
         self.db = db
-        self.login_container = ctk.CTkFrame(
+        self.signup_container = ctk.CTkFrame(
             self,
             fg_color="white",
             corner_radius=12,
             width=400,
             height=500
         )
-        self.login_container.place(relx=0.5, rely=0.45, anchor="center")
-        self.login_container.grid_propagate(False)
+        self.signup_container.place(relx=0.5, rely=0.45, anchor="center")
+        self.signup_container.grid_propagate(False)
 
         self.logo_image = ctk.CTkImage(
             light_image=Image.open("images/logo.png"),
             size=(80, 80)
         )
         ctk.CTkLabel(
-            self.login_container,
+            self.signup_container,
             image=self.logo_image,
             text=""
         ).pack(pady=(50, 10))
 
         ctk.CTkLabel(
-            self.login_container,
+            self.signup_container,
             text="Flow Space",
             font=("Inter", 28, "bold"),
-            text_color=("#000000"),
+            text_color="black",
         ).pack(pady=(0, 30))
 
+        self.email_entry = ctk.CTkEntry(
+            self.signup_container,
+            placeholder_text="Email",
+            width=300,
+            height=45,
+            corner_radius=16,
+            border_color="#E5E7EB",
+            fg_color="transparent",
+            text_color="black",
+            placeholder_text_color="#6B7280"
+        )
+        self.email_entry.pack(pady=10)
+
         self.username_entry = ctk.CTkEntry(
-            self.login_container,
+            self.signup_container,
             placeholder_text="Username",
             width=300,
             height=45,
@@ -53,7 +62,7 @@ class LoginPage(ctk.CTkFrame):
         self.username_entry.pack(pady=10)
 
         self.password_entry = ctk.CTkEntry(
-            self.login_container,
+            self.signup_container,
             placeholder_text="Password",
             width=300,
             height=45,
@@ -67,72 +76,71 @@ class LoginPage(ctk.CTkFrame):
         self.password_entry.pack(pady=10)
 
         ctk.CTkButton(
-            self.login_container,
-            text="Login",
+            self.signup_container,
+            text="Sign Up",
             width=300,
             height=45,
             corner_radius=16,
             fg_color="#636ae8",
             hover_color="#636ae8",
-            command=self.login
+            command=self.signup
         ).pack(pady=20)
 
         self.error = ctk.CTkLabel(
-            self.login_container,
+            self.signup_container,
             text="",
             text_color="#DC2626"
         )
-        self.error.pack()
+        self.error.pack(pady=(0, 10))
 
-        signup_link_section = ctk.CTkFrame(self.login_container, fg_color="transparent")
-        signup_link_section.pack(pady=5)
+        login_link_section = ctk.CTkFrame(self.signup_container, fg_color="transparent")
+        login_link_section.pack(pady=5)
 
         ctk.CTkLabel(
-            signup_link_section,
-            text="Don't have an account? ",
+            login_link_section,
+            text="Already have an account? ",
             fg_color="transparent",
             text_color="black"
         ).pack(side="left")
 
-        signup_link = ctk.CTkLabel(
-            signup_link_section,
-            text="Signup",
+        login_link = ctk.CTkLabel(
+            login_link_section,
+            text="Log in",
             width=60,
             cursor="hand2",
             text_color="#636ae8"
         )
-        signup_link.pack(side="left")
+        login_link.pack(side="left")
 
-        # if signup link is clicked, switch_page is called to switch the page to SignupPage
+        # if login link is clicked, switch_page is called to switch the page to LoginPage
         # e is an event object which holds info about mouse position, which widget has been clicked, etc)
         # e is passed into the lambda function so the tkinter knows which button was pressed
-        # then the lambda function runs the code on the right side of the colon
-        from signup import SignupPage
-        signup_link.bind("<Button-1>", lambda e: self.master.switch_page(SignupPage))
+        # then the lamda function runs the code on the right side of the colon
+        from login import LoginPage
+        login_link.bind("<Button-1>", lambda e: self.master.switch_page(LoginPage))
 
         # above is all the styling code, such as logo image, title, entry fields, buttons and links
 
-
-    # main login functionality
-    def login(self):
-        # retrieves the username and password from the entry fields
-        username = self.username_entry.get()
-        password = self.password_entry.get()
-        # displays error message if username or password not entered
-        if not username or not password:
+    # main signup functionality
+    def signup(self):
+        # retrieves the username, password and email from the entry fields
+        username = self.username_entry.get().strip()
+        password = self.password_entry.get().strip()
+        email = self.email_entry.get().strip()
+        # displays error message if username, password or email not entered
+        if not username or not password or not email:
             self.error.configure(text="Please fill in all fields")
             return
-        
+
         try:
-            # verify_login checks if the username and password exist in the database, in which case the user_id is returned
-            user_id = self.db.verify_login(username, password)
+            # create_user stores the users details into the database.
+            user_id = self.db.create_user(username, email, password)
             # if user_id is returned, page is switched to DecksPage
             # if user_id isn't returned (user does not exist in database), then an error message is shown
-
             if user_id:
                 self.master.switch_page(DecksPage, user_id=user_id, switch_page=self.master.switch_page)
             else:
-                messagebox.showerror("Login Failed", "Invalid username or password. Please try again.")
-        # if there is any other error during login, the Exception statement catches it and shows the error
+                messagebox.showerror("Error", "Username already exists or failed to create account")
+        # if there is any other error during signup, the Exception statement catches it and shows the error
         except Exception as e:
-            messagebox.showerror("Login Error", str(e))
+            messagebox.showerror("Signup Error", str(e))

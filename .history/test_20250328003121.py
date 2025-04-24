@@ -7,9 +7,9 @@ def seed_test_data():
     db = Database()
 
     # 1. Create or retrieve a test user.
-    username = "a"
-    email = "a"
-    password = "a"
+    username = "test"
+    email = "test"
+    password = "test"
 
     user_id = db.create_user(username, email, password)
     if user_id is None:
