@@ -1646,10 +1646,8 @@ class QuizSession(ctk.CTkFrame):
                     stat_label, stat_value, stat_icon = stats_layout[index]
                     self.create_stat_card(row_frame, stat_label, stat_value, stat_icon, col)
                     index += 1
-                    
-        # ADDED THE BELOW BUTTON TO FIX TESTING ISSUE
+
         ctk.CTkButton(
-            summary_frame,  
             text="Return to Quiz Homepage",
             width=200,
             height=40,
@@ -1658,8 +1656,8 @@ class QuizSession(ctk.CTkFrame):
             fg_color="#F3F4F6",
             text_color="black",
             hover_color="#E5E7EB",
-            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
-    ).pack(anchor="center", pady=20)
+            command=lambda: self.switch_page(__import__('app').DecksPage, user_id=self.user_id, switch_page=self.switch_page)
+        ).pack(anchor="center", pady=20)
         
     def create_stat_card(self, parent, label_text, value_text, icon_text, col_index):
         # Container for an individual stat card
@@ -1702,14 +1700,10 @@ class QuizSession(ctk.CTkFrame):
         
         ctk.CTkButton(
             button_frame,
-            text="Return to Quiz Homepage",
+            text="Return to Quiz",
             width=200,
             height=40,
             corner_radius=16,
-            font=("Inter", 14),
-            fg_color="#F3F4F6",
-            text_color="black",
-            hover_color="#E5E7EB",
             command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
         ).pack(pady=20, anchor="center")
 
@@ -2168,7 +2162,7 @@ class SettingsPage(BasePage):
 
         # create a central container to center the settings container within main_area
         center_container = ctk.CTkFrame(main_area, fg_color="transparent")
-        center_container.place(relx=0.5, rely=0.5, anchor="center")
+        center_container.place(relx=0.5, rely=0.3, anchor="center")
 
         # create settings container (holds the settings form) (to change username, email, password and delete account)
         self.settings_container = ctk.CTkFrame(

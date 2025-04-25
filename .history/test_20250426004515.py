@@ -131,9 +131,9 @@ def make_endurance_test_data():
     db = Database()
 
     # 1. Create (or retrieve) main test user
-    username = "endurancetest"
+    username = "endurance_tester"
     email    = "endurance@test.com"
-    pwd      = "endure"
+    pwd      = "EndurancePass123"
     user_id  = db.create_user(username, email, pwd) or \
                db.cursor.execute("SELECT user_id FROM users WHERE username = ?", (username,)).fetchone()[0]
     print(f"Main test user id: {user_id}")

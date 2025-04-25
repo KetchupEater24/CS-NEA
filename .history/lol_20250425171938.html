@@ -1,0 +1,254 @@
+<table style="border-collapse: collapse; width: 100%; font-family: sans-serif;">
+    <thead>
+      <tr style="background-color: #d9d2e9;">
+        <th style="border: 1px solid #999; padding: 6px;">Test No.</th>
+        <th style="border: 1px solid #999; padding: 6px;">Objective</th>
+        <th style="border: 1px solid #999; padding: 6px;">Purpose of Test</th>
+        <th style="border: 1px solid #999; padding: 6px;">Description of Test</th>
+        <th style="border: 1px solid #999; padding: 6px;">Test Data</th>
+        <th style="border: 1px solid #999; padding: 6px;">Test Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Test 1 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">1</td>
+        <td style="border: 1px solid #999; padding: 6px;">2.a – There should be a title on the page indicating what page it is</td>
+        <td style="border: 1px solid #999; padding: 6px;">Verify page title display</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Load decks page and check that a clear title appears indicating “Decks Page” (or equivalent)
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          The page displays “Decks” (or the correct title) prominently at the top.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 2 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">2</td>
+        <td style="border: 1px solid #999; padding: 6px;">2.b – Users should be able to add, edit and delete decks using buttons</td>
+        <td style="border: 1px solid #999; padding: 6px;">Verify CRUD operations on decks</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          On the decks page, click “Add Deck” → create a deck; click “Edit” → modify a deck; click “Delete” → remove a deck
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          Decks are successfully added, updated and removed, and the UI updates immediately to reflect each change.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 3 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">3</td>
+        <td style="border: 1px solid #999; padding: 6px;">2.c – Decks should be displayed in a grid format with max 3 per row</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validate grid layout</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Populate ≥4 decks and confirm no more than three appear in each horizontal row
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          Exactly three deck cards render per row; any additional decks wrap to a new row.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 4 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">4</td>
+        <td style="border: 1px solid #999; padding: 6px;">2.d – There should be a search option to search for specific decks</td>
+        <td style="border: 1px solid #999; padding: 6px;">Verify search functionality</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Enter a deck name in the search box and confirm only matching decks are shown
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          Search filters decks in real time, showing only those whose names contain the query.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 5 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">5</td>
+        <td style="border: 1px solid #999; padding: 6px;">2.e – Decks should be organised by highest to lowest priority</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validate deck ordering</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Load decks page and check that decks appear in descending priority order
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          Decks display in strict descending order of priority as determined by the spaced-repetition algorithm.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 6 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">6</td>
+        <td style="border: 1px solid #999; padding: 6px;">2.f – There should be a priority filter (High/Medium/Low)</td>
+        <td style="border: 1px solid #999; padding: 6px;">Verify priority filtering</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Select each priority option and confirm only decks of that priority display
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          When a priority is selected, only decks matching that priority appear and others are hidden.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 7 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">7</td>
+        <td style="border: 1px solid #999; padding: 6px;">2.g – The display area should be scrollable if many decks exist</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validate scroll container</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Populate enough decks to exceed viewport height and confirm vertical scroll appears
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          A scrollbar appears in the deck area, allowing users to scroll and view all decks.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 8 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">8</td>
+        <td style="border: 1px solid #999; padding: 6px;">2.h – Each deck card shows name, total cards, cards for review & priority</td>
+        <td style="border: 1px solid #999; padding: 6px;">Verify card contents</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Inspect a deck card and confirm it displays its title, total card count, review-ready count and priority label
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          Each deck container clearly lists its name, “X cards total,” “Y cards review,” and its priority.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+    </tbody>
+  </table>
+  

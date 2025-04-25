@@ -1150,8 +1150,7 @@ class QuizPage(BasePage):
 class QuizSession(ctk.CTkFrame):
     def __init__(self, master, user_id, deck_id, switch_page, db):
         super().__init__(master, corner_radius=0, fg_color="white")
-        self.difficulty_rated = False # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
-
+        
         # Create a canvas with scrollbar for scrollability
         self.canvas = ctk.CTkCanvas(master, highlightthickness=0, bg="white")
         self.scrollbar = ctk.CTkScrollbar(master, orientation="vertical", command=self.canvas.yview)
@@ -1459,7 +1458,6 @@ class QuizSession(ctk.CTkFrame):
         self.after(1000, self.update_timer)
 
     def display_card(self):
-        self.difficulty_rated = False # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
         # if no more cards remain, end the quiz
         if self.current_card >= self.total_cards:
             self.end_quiz()
@@ -1481,7 +1479,6 @@ class QuizSession(ctk.CTkFrame):
         self.card_start_time = datetime.now()
 
     def show_answer(self):
-    
         # hide the "show answer" button and reveal the answer and rating options
         self.button_frame.pack_forget()
         self.answer_frame.pack(fill="x", pady=(5, 10))  # Reduced spacing
@@ -1491,10 +1488,6 @@ class QuizSession(ctk.CTkFrame):
         self.correctness_section.pack(fill="x", pady=(5, 0))  # Reduced spacing
 
     def record_correctness(self, was_correct):
-        # check if difficulty has been rated first
-        if not self.difficulty_rated: # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
-            self.show_temporary_confirmation("Please rate difficulty first before marking correctness", duration=2000) # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
-            return # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
         # set correctness
         if was_correct:
             self.correct_count += 1
@@ -1525,7 +1518,7 @@ class QuizSession(ctk.CTkFrame):
         confirm_label = ctk.CTkLabel(
             popup,
             text=message,
-            font=("Inter", 14),
+            font=("Inter", 14, "bold"),
             text_color="#000000",  
             padx=20,
             pady=10
@@ -1537,8 +1530,6 @@ class QuizSession(ctk.CTkFrame):
 
             
     def rate_card_difficulty(self, quality):
-        self.difficulty_rated = True # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
-
         # update scheduling of card using spaced repitition algorithm
         card_time = (datetime.now() - self.card_start_time).total_seconds()
         self.db.update_spaced_rep(
@@ -1607,7 +1598,7 @@ class QuizSession(ctk.CTkFrame):
         
         ctk.CTkLabel(
             stats_container,
-            text="Session Results (Go to Analytics Page to see what these mean - Information located on Analytics Page --> then scroll down on Analytics Page)",
+            text="Session Results",
             font=("Inter", 18, "bold"),
             text_color="#111827"
         ).pack(anchor="w", padx=20, pady=(15, 10))
@@ -1623,12 +1614,12 @@ class QuizSession(ctk.CTkFrame):
         
         # Layout for stats - each tuple is (label, value, icon)
         stats_layout = [
-            ("Total Cards Reviewed", f"{total_cards}", "📄"),
+            ("Total Cards", f"{total_cards}", "📄"),
             ("Correct Answers", f"{self.correct_count}", "✅"),
             ("Wrong Answers", f"{wrong}", "❌"),
             ("Accuracy", f"{accuracy:.1f}%", "🎯"),
-            ("Total Time Spent", f"{self.total_time:.1f}s", "⏱️"),
-            ("Avg Time Per Card", f"{(self.total_time / total_cards):.1f}s" if total_cards else "0s", "⚡")
+            ("Total Time", f"{self.total_time:.1f}s", "⏱️"),
+            ("Avg Time/Card", f"{(self.total_time / total_cards):.1f}s" if total_cards else "0s", "⚡")
         ]
         
         # Use same grid layout as analytics page: 3 rows, 2 columns
@@ -1646,20 +1637,23 @@ class QuizSession(ctk.CTkFrame):
                     stat_label, stat_value, stat_icon = stats_layout[index]
                     self.create_stat_card(row_frame, stat_label, stat_value, stat_icon, col)
                     index += 1
-                    
-        # ADDED THE BELOW BUTTON TO FIX TESTING ISSUE
+        
+        # Return button with improved visibility
+        return_container = ctk.CTkFrame(summary_frame, fg_color="transparent")
+        return_container.pack(fill="x", pady=(10, 20))
+        
         ctk.CTkButton(
-            summary_frame,  
-            text="Return to Quiz Homepage",
+            return_container,
+            text="Return to Quiz",
             width=200,
             height=40,
             corner_radius=16,
-            font=("Inter", 14),
-            fg_color="#F3F4F6",
-            text_color="black",
+            font=("Inter", 14, "bold"),
+            fg_color="#F3F4F6",  
+            text_color="white",
             hover_color="#E5E7EB",
             command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
-    ).pack(anchor="center", pady=20)
+        ).pack(anchor="center", pady=20)
         
     def create_stat_card(self, parent, label_text, value_text, icon_text, col_index):
         # Container for an individual stat card
@@ -1702,14 +1696,10 @@ class QuizSession(ctk.CTkFrame):
         
         ctk.CTkButton(
             button_frame,
-            text="Return to Quiz Homepage",
+            text="Return to Quiz",
             width=200,
             height=40,
             corner_radius=16,
-            font=("Inter", 14),
-            fg_color="#F3F4F6",
-            text_color="black",
-            hover_color="#E5E7EB",
             command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
         ).pack(pady=20, anchor="center")
 
@@ -1755,7 +1745,6 @@ class AnalyticsPage(BasePage):
         # create overall stats section, deck performance section, graph controls and return button
         self.create_overall_stats_section()
         self.create_deck_performance_section()
-        self.create_info_section()
         self.create_return_button()
     
     # creates a single stat card used in overall stats section and individual deck stats section
@@ -1809,12 +1798,12 @@ class AnalyticsPage(BasePage):
 
         # layout for each stat card: (label, value, icon)
         stats_layout = [
-            ("Total Quizzes Completed Across All Decks", str(total_sessions), "📊"),
-            ("Total Cards Reviewed Across All Decks", str(total_reviewed), "📄"),
-            ("Total Correct Answers Across All Decks", str(total_correct), "✅"),
-            ("Average Accuracy Across All Decks", f"{overall_accuracy:.1f}%", "🎯"),
-            ("Total Time Spent Quizzing Yourself Across All Decks", f"{total_time:.1f}s", "⏱️"),
-            ("Avg Time Per Card Across All Decks", f"{avg_time_card:.1f}s", "⚡"),
+            ("Total Sessions", str(total_sessions), "📊"),
+            ("Total Cards Reviewed", str(total_reviewed), "📄"),
+            ("Total Correct Answers", str(total_correct), "✅"),
+            ("Overall Accuracy", f"{overall_accuracy:.1f}%", "🎯"),
+            ("Total Quiz Time", f"{total_time:.1f}s", "⏱️"),
+            ("Avg Time/Card", f"{avg_time_card:.1f}s", "⚡"),
         ]
 
         # create stat cards in a grid with 3 rows and 2 columns
@@ -1955,12 +1944,12 @@ class AnalyticsPage(BasePage):
             deck_stats = self.db.get_deck_stats(self.user_id, deck_id)
             # define layout for deck details: each tuple is (stat label, stat value, icon)
             deck_details_layout = [
-                ("Quizzes Completed For This Deck", f"{deck_stats.get('session_count', 0)}", "📊"),
-                ("Total Amount of Cards Reviewed For This Deck", f"{deck_stats.get('total_reviewed', 0)}", "📄"),
-                ("Total Correct Answers For This Deck", f"{deck_stats.get('total_correct', 0)}", "✅"),
-                ("Accuracy For This Deck", f"{deck_stats.get('accuracy', 0):.1f}%", "🎯"),
-                ("Total Time Spent Quizzing For This Deck", f"{deck_stats.get('total_time', 0):.1f}s", "⏱️"),
-                ("Average Time Per Card For This Deck", f"{deck_stats.get('avg_time_per_card', 0):.1f}s", "⚡"),
+                ("sessions", f"{deck_stats.get('session_count', 0)}", "📊"),
+                ("total cards reviewed", f"{deck_stats.get('total_reviewed', 0)}", "📄"),
+                ("correct answers", f"{deck_stats.get('total_correct', 0)}", "✅"),
+                ("overall accuracy", f"{deck_stats.get('accuracy', 0):.1f}%", "🎯"),
+                ("total quiz time", f"{deck_stats.get('total_time', 0):.1f}s", "⏱️"),
+                ("avg time/card", f"{deck_stats.get('avg_time_per_card', 0):.1f}s", "⚡"),
             ]
 
             # create a container frame for the deck detail stat cards
@@ -1988,135 +1977,6 @@ class AnalyticsPage(BasePage):
             # display the deck details frame so all stat cards are visible
             deck_details_frame.pack(fill="x", pady=(5, 10))
 
-
-    def create_info_section(self):
-        # Container for the information section
-        info_container = ctk.CTkFrame(
-            self.analytics_container,
-            fg_color="white",
-            corner_radius=8,
-            border_width=1,
-            border_color="#E5E7EB"
-        )
-        info_container.pack(fill="x", pady=(0, 20))
-
-        # Title for the information section
-        ctk.CTkLabel(
-            info_container,
-            text="Understanding Your Analytics",
-            font=("Inter", 18, "bold"),
-            text_color="#111827"
-        ).pack(anchor="w", padx=20, pady=(15, 10))
-
-        # Create expandable sections for different categories of information
-        self.create_expandable_info_section(
-            info_container, 
-            "Overall Statistics Explained",
-            [
-                ("Total Quizzes Completed", "The total number of quiz sessions you've finished across all decks. Each time you complete a full quiz session with a deck, this counter increases."),
-                ("Total Cards Reviewed", "The cumulative number of flashcards you've studied across all your quiz sessions. This includes repeated reviews of the same cards."),
-                ("Total Correct Answers", "The number of cards you marked as 'Correct' during your reviews. This reflects how many times you successfully recalled the information."),
-                ("Overall Accuracy", "The percentage of cards you marked as 'Correct' out of all cards reviewed. Higher percentages indicate better recall performance."),
-                ("Total Time Spent Quizzing Yourself", "The cumulative time you've spent in quiz sessions across all decks, measured in seconds."),
-                ("Avg Time Per Card", "The average time you spend on each card, calculated by dividing your total quiz time by the number of cards reviewed. This indicates your review speed.")
-            ]
-        )
-        
-        self.create_expandable_info_section(
-            info_container,
-            "Deck Performance Score Explained",
-            [
-                ("Performance Score", "The performance score (shown as X/100 next to the 'View Details' button) is a comprehensive measure of your mastery of a specific deck. It combines your accuracy rate, review consistency, and recall speed into a single score out of 100."),
-                ("Score Colors", "The score is color-coded for quick assessment: Red (below 50) indicates significant room for improvement, Yellow (50-79) shows moderate performance, and Green (80+) represents strong mastery of the deck."),
-                ("Improving Your Score", "To improve a deck's performance score: review regularly, work on increasing your accuracy by studying cards marked as difficult, and gradually aim to reduce your average time per card while maintaining high accuracy.")
-            ]
-        )
-        
-        self.create_expandable_info_section(
-            info_container,
-            "How to Use These Analytics for Effective Studying",
-            [
-                ("Focus on Low-Performance Decks", "Prioritize decks with lower performance scores (red or yellow) as they require more attention. These represent knowledge areas where you have the most room for improvement."),
-                ("Track Accuracy Trends", "Monitor your accuracy percentages over time. If a deck's accuracy is consistently low, you may need to revisit the underlying material or break the deck into smaller, more manageable chunks."),
-                ("Optimize Study Sessions", "Use the 'Avg Time Per Card' metric to plan study sessions. If you know your average time, you can better estimate how much time to allocate for reviewing a specific number of cards."),
-                ("Balanced Approach", "Don't neglect high-performing decks entirely. Schedule occasional reviews of these decks to maintain your knowledge, while focusing more time on challenging decks."),
-                ("Spaced Repetition", "Remember that the system schedules cards based on your difficulty ratings. Cards rated as 'Very Hard' will appear more frequently than those rated 'Very Easy', optimizing your study time naturally."),
-                ("Regular Review", "Consistent, spaced review is more effective than cramming. Try to complete at least one quiz session daily, even if it's brief, to maintain and strengthen your memory.")
-            ]
-        )
-
-    def create_expandable_info_section(self, parent, title, items):
-        # Create a frame for this expandable section
-        section_frame = ctk.CTkFrame(parent, fg_color="white")
-        section_frame.pack(fill="x", padx=20, pady=5)
-        
-        # Create the header with expand/collapse functionality
-        header_frame = ctk.CTkFrame(section_frame, fg_color="#F9FAFB")
-        header_frame.pack(fill="x", pady=5)
-        
-        # Track expanded state
-        expanded = [False]  # Use a list to create a mutable reference
-        
-        # Title and toggle button in the header
-        title_label = ctk.CTkLabel(
-            header_frame,
-            text=title,
-            font=("Inter", 14, "bold"),
-            text_color="#4B5563"
-        )
-        title_label.pack(side="left", padx=15, pady=10)
-        
-        # Toggle button (+ or -)
-        toggle_button = ctk.CTkButton(
-            header_frame,
-            text="+",  # Start collapsed
-            width=30,
-            height=30,
-            corner_radius=15,
-            fg_color="#E5E7EB",
-            text_color="#4B5563",
-            hover_color="#D1D5DB",
-            font=("Inter", 16, "bold")
-        )
-        toggle_button.pack(side="right", padx=15, pady=10)
-        
-        # Content frame (hidden initially)
-        content_frame = ctk.CTkFrame(section_frame, fg_color="white")
-        
-        # Add items to content frame
-        for item_title, item_description in items:
-            item_frame = ctk.CTkFrame(content_frame, fg_color="white")
-            item_frame.pack(fill="x", pady=5)
-            
-            ctk.CTkLabel(
-                item_frame,
-                text=item_title,
-                font=("Inter", 12, "bold"),
-                text_color="#111827"
-            ).pack(anchor="w", padx=15, pady=(5, 0))
-            
-            ctk.CTkLabel(
-                item_frame,
-                text=item_description,
-                font=("Inter", 12),
-                text_color="#4B5563",
-                wraplength=800,
-                justify="left"
-            ).pack(anchor="w", padx=15, pady=(0, 5))
-        
-        # Function to toggle visibility
-        def toggle_section():
-            expanded[0] = not expanded[0]
-            if expanded[0]:
-                content_frame.pack(fill="x", pady=5)
-                toggle_button.configure(text="-")
-            else:
-                content_frame.pack_forget()
-                toggle_button.configure(text="+")
-        
-        # Connect the toggle function to the button
-        toggle_button.configure(command=toggle_section)
-    
     # return to dashboard button
     def create_return_button(self):
         return_container = ctk.CTkFrame(self.analytics_container, fg_color="transparent")
@@ -2168,7 +2028,7 @@ class SettingsPage(BasePage):
 
         # create a central container to center the settings container within main_area
         center_container = ctk.CTkFrame(main_area, fg_color="transparent")
-        center_container.place(relx=0.5, rely=0.5, anchor="center")
+        center_container.place(relx=0.5, rely=0.3, anchor="center")
 
         # create settings container (holds the settings form) (to change username, email, password and delete account)
         self.settings_container = ctk.CTkFrame(

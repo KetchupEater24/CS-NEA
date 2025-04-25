@@ -1,0 +1,164 @@
+<table style="border-collapse: collapse; width: 100%; font-family: sans-serif; font-size: 10px;">
+    <thead>
+      <tr style="background-color: #d9d2e9; font-weight: bold;">
+        <th style="border: 1px solid #999; padding: 6px;">Test No.</th>
+        <th style="border: 1px solid #999; padding: 6px;">Objective</th>
+        <th style="border: 1px solid #999; padding: 6px;">Purpose of Test</th>
+        <th style="border: 1px solid #999; padding: 6px;">Description of Test</th>
+        <th style="border: 1px solid #999; padding: 6px;">Test Data</th>
+        <th style="border: 1px solid #999; padding: 6px;">Test Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Test 1 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">1</td>
+        <td style="border: 1px solid #999; padding: 6px;">S1 – Simulate 100 concurrent login requests</td>
+        <td style="border: 1px solid #999; padding: 6px;">Measure authentication throughput</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Fire 100 simultaneous POST /login requests using a load‐testing tool.
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Load Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          All 100 logins complete successfully within 200 ms average, with error rate &lt;1%.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 2 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">2</td>
+        <td style="border: 1px solid #999; padding: 6px;">S2 – Simulate 200 concurrent deck-fetch requests</td>
+        <td style="border: 1px solid #999; padding: 6px;">Evaluate deck retrieval under load</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Fire 200 simultaneous GET /decks requests and measure response times.
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Load Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          All deck requests return within 300 ms average, with error rate &lt;2%.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 3 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">3</td>
+        <td style="border: 1px solid #999; padding: 6px;">S3 – Bulk-create 1,000 cards in rapid succession</td>
+        <td style="border: 1px solid #999; padding: 6px;">Test write throughput</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Send 1,000 POST /cards requests back-to-back and monitor failures.
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Load Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          All 1,000 creations succeed within 500 ms each; no data loss.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 4 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">4</td>
+        <td style="border: 1px solid #999; padding: 6px;">S4 – Sustained 50 quiz-session requests/sec for 5 minutes</td>
+        <td style="border: 1px solid #999; padding: 6px;">Assess stability under sustained load</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Generate a steady rate of 50 POST /quiz requests per second for 5 minutes.
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Load Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          No memory leaks or crashes; CPU &lt; 80% and error rate &lt;1%.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 5 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">5</td>
+        <td style="border: 1px solid #999; padding: 6px;">S5 – Simulate 200 ms network latency with 100 concurrent deck fetches</td>
+        <td style="border: 1px solid #999; padding: 6px;">Evaluate performance under degraded network</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Introduce 200 ms artificial latency and fire 100 GET /decks requests concurrently.
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Load Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          Average response &lt; 600 ms, error rate &lt;2%, and no timeouts.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+    </tbody>
+  </table>
+  

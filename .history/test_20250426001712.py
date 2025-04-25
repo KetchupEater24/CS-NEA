@@ -126,63 +126,71 @@ import random
 from datetime import datetime, timedelta
 from database import Database
 
-
-def make_endurance_test_data():
+def seed_endurance_test_data():
     db = Database()
 
-    # 1. Create (or retrieve) main test user
-    username = "endurancetest"
-    email    = "endurance@test.com"
-    pwd      = "endure"
-    user_id  = db.create_user(username, email, pwd) or \
-               db.cursor.execute("SELECT user_id FROM users WHERE username = ?", (username,)).fetchone()[0]
+    main_username = "endurancetest"
+    main_email = "endurance@test.com"
+    main_password = "endure"
+    user_id = db.create_user(main_username, main_email, main_password)
+    if user_id is None:
+        row = db.cursor.execute(
+            "SELECT user_id FROM users WHERE username = ?", (main_username,)
+        ).fetchone()
+        user_id = row[0]
+
     print(f"Main test user id: {user_id}")
 
-    # 2. Create 100 decks
     deck_ids = []
-    for i in range(1, 101):
-        deck_ids.append(db.create_deck(user_id, f"Deck {i}"))
-    print("Created 100 decks.")
+    for i in range(1, 1002):
+        deck_name = f"Deck {i}"
+        deck_id = db.create_deck(user_id, deck_name)
+        deck_ids.append(deck_id)
+    print(f"Created {len(deck_ids)} decks.")
 
-    # 3. Add 100 cards to each deck
-    for d_id in deck_ids:
-        for j in range(1, 101):
-            q = f"Deck {d_id} - Card Q{j}"
-            a = f"Answer for card {j} in deck {d_id}"
-            db.create_card(d_id, q, a)
-    print("Added 100 cards to each deck.")
+    bulk_deck_id = db.create_deck(user_id, "Bulk Card Deck")
+    for i in range(1, 1002):
+        question = f"Card Q{i}"
+        answer = f"Answer for card {i}"
+        db.create_card(bulk_deck_id, question, answer)
+    print("Created 1001 cards in 'Bulk Card Deck'.")
 
-    # 4. Paragraph-length Q&A
-    para_deck = db.create_deck(user_id, "Paragraph QA Deck")
-    db.create_card(
-        para_deck,
-        "What is Lorem Ipsum?",
-        ("Lorem Ipsum is simply dummy text of the printing and typesetting "
-         "industry, used since the 1500s. It has survived five centuries.")
+    para_deck_id = db.create_deck(user_id, "Paragraph QA Deck")
+    short_q = "What is Lorem Ipsum?"
+    long_ans = (
+        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. "
+        "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, "
+        "when an unknown printer took a galley of type and scrambled it to make a type specimen book."
     )
-    print("Created one paragraph-length Q&A card.")
+    db.create_card(para_deck_id, short_q, long_ans)
+    print("Created a paragraph‐length Q&A card.")
 
-    # 5. Create 100 users
-    for i in range(1, 101):
-        db.create_user(f"user_{i}", f"user_{i}@test.com", "TestPass!234")
-    print("Created 100 additional users.")
+    for i in range(1, 1002):
+        uname = f"user_{i}"
+        email = f"user_{i}@test.com"
+        pwd = "TestPass!234"
+        db.create_user(uname, email, pwd)
+    print("Created 1001 additional users.")
 
-    # 6. Record 100 quiz sessions for main user
-    for _ in range(100):
-        deck_id     = random.choice(deck_ids)
-        total_cards = db.get_card_count(deck_id) or 1
-        correct     = random.randint(0, total_cards)
-        avg_time    = random.uniform(1.0, 5.0)
-        deck_time   = total_cards * avg_time
+    for i in range(1000):
+        # cycle through decks
+        deck_id = deck_ids[i % len(deck_ids)]
+        total_cards = db.get_card_count(deck_id)
+        if total_cards == 0:
+            total_cards = 1
+        correct = random.randint(0, total_cards)
+        avg_time = random.uniform(1.0, 5.0)
+        deck_time = total_cards * avg_time
         db.save_quiz_result(user_id, deck_id, total_cards, correct, avg_time, deck_time)
-    print("Inserted 100 quiz sessions.")
+    print("Inserted 1000 quiz sessions for main user.")
 
     db.close()
-    print("Seeding complete.")
+    print("Endurance test data seeded successfully.")
 
+if __name__ == "__main__":
+    seed_endurance_test_data()
 
 
 if __name__ == "__main__":
     make_test_data()
-    make_endurance_test_data()
 

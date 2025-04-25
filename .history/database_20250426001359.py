@@ -539,7 +539,7 @@ import random
 from datetime import datetime, timedelta
 from database import Database
 
-def make_endurance_test_data():
+def seed_endurance_test_data():
     db = Database()
 
     # 1. Create or get a main test user
@@ -608,4 +608,4 @@ def make_endurance_test_data():
     print("Endurance test data seeded successfully.")
 
 if __name__ == "__main__":
-    make_endurance_test_data()
+    seed_endurance_test_data()

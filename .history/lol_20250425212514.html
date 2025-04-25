@@ -1,0 +1,134 @@
+<table style="border-collapse: collapse; width: 100%; font-family: sans-serif; font-size: 10px;">
+    <thead>
+      <tr style="background-color: #d9d2e9; font-weight: bold;">
+        <th style="border: 1px solid #999; padding: 6px;">Test No.</th>
+        <th style="border: 1px solid #999; padding: 6px;">Objective</th>
+        <th style="border: 1px solid #999; padding: 6px;">Purpose of Test</th>
+        <th style="border: 1px solid #999; padding: 6px;">Description of Test</th>
+        <th style="border: 1px solid #999; padding: 6px;">Test Data</th>
+        <th style="border: 1px solid #999; padding: 6px;">Test Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Test 1 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">1</td>
+        <td style="border: 1px solid #999; padding: 6px;">7.a – Entry fields present for username, email & password</td>
+        <td style="border: 1px solid #999; padding: 6px;">Verify form inputs</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Open settings page and check for visible input fields to change username, email, and password.
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          All three input fields (username, email, password) are present and editable.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 2 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">2</td>
+        <td style="border: 1px solid #999; padding: 6px;">7.b – Current username & email should be displayed</td>
+        <td style="border: 1px solid #999; padding: 6px;">Verify pre-populated values</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Open settings page and confirm the fields show the user’s existing username and email.
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          The username and email fields are pre-filled with the user’s current information.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 3 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">3</td>
+        <td style="border: 1px solid #999; padding: 6px;">7.c – “Update” button saves changes to database</td>
+        <td style="border: 1px solid #999; padding: 6px;">Verify update functionality</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Change username/email/password, click “Update” and confirm changes persist on reload.
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          After clicking “Update,” the new values are saved and displayed on subsequent visits.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 4 -->
+      <tr>
+        <td style="border: 1px solid #999; padding: 6px;">4</td>
+        <td style="border: 1px solid #999; padding: 6px;">7.d – “Delete Account” button removes user from database</td>
+        <td style="border: 1px solid #999; padding: 6px;">Verify deletion flow</td>
+        <td style="border: 1px solid #999; padding: 6px;">
+          Click “Delete Account,” confirm prompt, then attempt to log in again.
+        </td>
+        <td style="border: 1px solid #999; padding: 6px;">–</td>
+        <td style="border: 1px solid #999; padding: 6px;">Validation Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Expected Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">
+          After deletion and confirmation, the user cannot log in with the same credentials.
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 6px; background-color: #d9d2e9;">
+          Actual Outcome
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="border: 1px solid #999; padding: 10px;">&nbsp;</td>
+      </tr>
+    </tbody>
+  </table>
+  

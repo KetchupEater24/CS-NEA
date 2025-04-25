@@ -1702,7 +1702,7 @@ class QuizSession(ctk.CTkFrame):
         
         ctk.CTkButton(
             button_frame,
-            text="Return to Quiz Homepage",
+             text="Return to Quiz Homepage",
             width=200,
             height=40,
             corner_radius=16,
@@ -2168,7 +2168,7 @@ class SettingsPage(BasePage):
 
         # create a central container to center the settings container within main_area
         center_container = ctk.CTkFrame(main_area, fg_color="transparent")
-        center_container.place(relx=0.5, rely=0.5, anchor="center")
+        center_container.place(relx=0.5, rely=0.3, anchor="center")
 
         # create settings container (holds the settings form) (to change username, email, password and delete account)
         self.settings_container = ctk.CTkFrame(

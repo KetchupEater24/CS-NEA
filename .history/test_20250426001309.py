@@ -120,69 +120,7 @@ def make_test_data():
     db.conn.commit()
     db.close()
     print("Test data seeded successfully!")
-    
-    
-import random
-from datetime import datetime, timedelta
-from database import Database
-
-
-def make_endurance_test_data():
-    db = Database()
-
-    # 1. Create (or retrieve) main test user
-    username = "endurancetest"
-    email    = "endurance@test.com"
-    pwd      = "endure"
-    user_id  = db.create_user(username, email, pwd) or \
-               db.cursor.execute("SELECT user_id FROM users WHERE username = ?", (username,)).fetchone()[0]
-    print(f"Main test user id: {user_id}")
-
-    # 2. Create 100 decks
-    deck_ids = []
-    for i in range(1, 101):
-        deck_ids.append(db.create_deck(user_id, f"Deck {i}"))
-    print("Created 100 decks.")
-
-    # 3. Add 100 cards to each deck
-    for d_id in deck_ids:
-        for j in range(1, 101):
-            q = f"Deck {d_id} - Card Q{j}"
-            a = f"Answer for card {j} in deck {d_id}"
-            db.create_card(d_id, q, a)
-    print("Added 100 cards to each deck.")
-
-    # 4. Paragraph-length Q&A
-    para_deck = db.create_deck(user_id, "Paragraph QA Deck")
-    db.create_card(
-        para_deck,
-        "What is Lorem Ipsum?",
-        ("Lorem Ipsum is simply dummy text of the printing and typesetting "
-         "industry, used since the 1500s. It has survived five centuries.")
-    )
-    print("Created one paragraph-length Q&A card.")
-
-    # 5. Create 100 users
-    for i in range(1, 101):
-        db.create_user(f"user_{i}", f"user_{i}@test.com", "TestPass!234")
-    print("Created 100 additional users.")
-
-    # 6. Record 100 quiz sessions for main user
-    for _ in range(100):
-        deck_id     = random.choice(deck_ids)
-        total_cards = db.get_card_count(deck_id) or 1
-        correct     = random.randint(0, total_cards)
-        avg_time    = random.uniform(1.0, 5.0)
-        deck_time   = total_cards * avg_time
-        db.save_quiz_result(user_id, deck_id, total_cards, correct, avg_time, deck_time)
-    print("Inserted 100 quiz sessions.")
-
-    db.close()
-    print("Seeding complete.")
-
-
 
 if __name__ == "__main__":
     make_test_data()
-    make_endurance_test_data()
 

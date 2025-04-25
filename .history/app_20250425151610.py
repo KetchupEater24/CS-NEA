@@ -1150,8 +1150,7 @@ class QuizPage(BasePage):
 class QuizSession(ctk.CTkFrame):
     def __init__(self, master, user_id, deck_id, switch_page, db):
         super().__init__(master, corner_radius=0, fg_color="white")
-        self.difficulty_rated = False # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
-
+        
         # Create a canvas with scrollbar for scrollability
         self.canvas = ctk.CTkCanvas(master, highlightthickness=0, bg="white")
         self.scrollbar = ctk.CTkScrollbar(master, orientation="vertical", command=self.canvas.yview)
@@ -1459,7 +1458,6 @@ class QuizSession(ctk.CTkFrame):
         self.after(1000, self.update_timer)
 
     def display_card(self):
-        self.difficulty_rated = False # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
         # if no more cards remain, end the quiz
         if self.current_card >= self.total_cards:
             self.end_quiz()
@@ -1481,7 +1479,6 @@ class QuizSession(ctk.CTkFrame):
         self.card_start_time = datetime.now()
 
     def show_answer(self):
-    
         # hide the "show answer" button and reveal the answer and rating options
         self.button_frame.pack_forget()
         self.answer_frame.pack(fill="x", pady=(5, 10))  # Reduced spacing
@@ -1491,10 +1488,6 @@ class QuizSession(ctk.CTkFrame):
         self.correctness_section.pack(fill="x", pady=(5, 0))  # Reduced spacing
 
     def record_correctness(self, was_correct):
-        # check if difficulty has been rated first
-        if not self.difficulty_rated: # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
-            self.show_temporary_confirmation("Please rate difficulty first before marking correctness", duration=2000) # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
-            return # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
         # set correctness
         if was_correct:
             self.correct_count += 1
@@ -1537,8 +1530,6 @@ class QuizSession(ctk.CTkFrame):
 
             
     def rate_card_difficulty(self, quality):
-        self.difficulty_rated = True # ADDED THIS LINE OF CODE TO FIX TESTING ISSUE
-
         # update scheduling of card using spaced repitition algorithm
         card_time = (datetime.now() - self.card_start_time).total_seconds()
         self.db.update_spaced_rep(
@@ -1607,7 +1598,7 @@ class QuizSession(ctk.CTkFrame):
         
         ctk.CTkLabel(
             stats_container,
-            text="Session Results (Go to Analytics Page to see what these mean - Information located on Analytics Page --> then scroll down on Analytics Page)",
+            text="Session Results",
             font=("Inter", 18, "bold"),
             text_color="#111827"
         ).pack(anchor="w", padx=20, pady=(15, 10))
@@ -1646,10 +1637,9 @@ class QuizSession(ctk.CTkFrame):
                     stat_label, stat_value, stat_icon = stats_layout[index]
                     self.create_stat_card(row_frame, stat_label, stat_value, stat_icon, col)
                     index += 1
-                    
-        # ADDED THE BELOW BUTTON TO FIX TESTING ISSUE
+        
+
         ctk.CTkButton(
-            summary_frame,  
             text="Return to Quiz Homepage",
             width=200,
             height=40,
@@ -1658,8 +1648,8 @@ class QuizSession(ctk.CTkFrame):
             fg_color="#F3F4F6",
             text_color="black",
             hover_color="#E5E7EB",
-            command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
-    ).pack(anchor="center", pady=20)
+            command=lambda: self.switch_page(__import__('app').DecksPage, user_id=self.user_id, switch_page=self.switch_page)
+        ).pack(anchor="center", pady=20)
         
     def create_stat_card(self, parent, label_text, value_text, icon_text, col_index):
         # Container for an individual stat card
@@ -1702,14 +1692,10 @@ class QuizSession(ctk.CTkFrame):
         
         ctk.CTkButton(
             button_frame,
-            text="Return to Quiz Homepage",
+            text="Return to Quiz",
             width=200,
             height=40,
             corner_radius=16,
-            font=("Inter", 14),
-            fg_color="#F3F4F6",
-            text_color="black",
-            hover_color="#E5E7EB",
             command=lambda: self.switch_page(__import__('app').QuizPage, user_id=self.user_id, switch_page=self.switch_page)
         ).pack(pady=20, anchor="center")
 
@@ -2168,7 +2154,7 @@ class SettingsPage(BasePage):
 
         # create a central container to center the settings container within main_area
         center_container = ctk.CTkFrame(main_area, fg_color="transparent")
-        center_container.place(relx=0.5, rely=0.5, anchor="center")
+        center_container.place(relx=0.5, rely=0.3, anchor="center")
 
         # create settings container (holds the settings form) (to change username, email, password and delete account)
         self.settings_container = ctk.CTkFrame(

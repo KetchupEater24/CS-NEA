@@ -1,0 +1,146 @@
+<table style="width:80%; border-collapse: collapse; font-family: sans-serif; font-size:10px;">
+    <thead>
+      <tr style="background:#d9d2e9;">
+        <th style="padding:4px; border:1px solid #999;">Test No.</th>
+        <th style="padding:4px; border:1px solid #999;">Objective</th>
+        <th style="padding:4px; border:1px solid #999;">Purpose of Test</th>
+        <th style="padding:4px; border:1px solid #999;">Description of Test</th>
+        <th style="padding:4px; border:1px solid #999;">Test Data</th>
+        <th style="padding:4px; border:1px solid #999;">Test Type</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Test 1 -->
+      <tr>
+        <td style="padding:4px; border:1px solid #999;">1</td>
+        <td style="padding:4px; border:1px solid #999;">Add &gt;1000 Decks</td>
+        <td style="padding:4px; border:1px solid #999;">Measure deck creation throughput</td>
+        <td style="padding:4px; border:1px solid #999;">Send 1000+ POST /decks requests rapidly and monitor for errors.</td>
+        <td style="padding:4px; border:1px solid #999;">–</td>
+        <td style="padding:4px; border:1px solid #999;">Endurance Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Expected Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">All 1000+ deck creations succeed without errors and average response time &lt;300 ms.</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Actual Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 2 -->
+      <tr>
+        <td style="padding:4px; border:1px solid #999;">2</td>
+        <td style="padding:4px; border:1px solid #999;">Add &gt;1000 Cards</td>
+        <td style="padding:4px; border:1px solid #999;">Measure card creation throughput</td>
+        <td style="padding:4px; border:1px solid #999;">Send 1000+ POST /cards requests rapidly and monitor for errors.</td>
+        <td style="padding:4px; border:1px solid #999;">–</td>
+        <td style="padding:4px; border:1px solid #999;">Endurance Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Expected Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">All 1000+ card creations succeed without errors and average response time &lt;300 ms.</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Actual Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 3 -->
+      <tr>
+        <td style="padding:4px; border:1px solid #999;">3</td>
+        <td style="padding:4px; border:1px solid #999;">1000+ Decks on Quiz Page</td>
+        <td style="padding:4px; border:1px solid #999;">Validate UI rendering under load</td>
+        <td style="padding:4px; border:1px solid #999;">Populate system with 1000+ decks, load quiz page and check performance.</td>
+        <td style="padding:4px; border:1px solid #999;">–</td>
+        <td style="padding:4px; border:1px solid #999;">Endurance Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Expected Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">Quiz page renders all decks with scrolling and loads in &lt;500 ms without errors.</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Actual Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 4 -->
+      <tr>
+        <td style="padding:4px; border:1px solid #999;">4</td>
+        <td style="padding:4px; border:1px solid #999;">Paragraph-length Q&amp;A</td>
+        <td style="padding:4px; border:1px solid #999;">Validate handling of long text</td>
+        <td style="padding:4px; border:1px solid #999;">Create a card with a short question and paragraph-length answer to test wrapping/layout.</td>
+        <td style="padding:4px; border:1px solid #999;">–</td>
+        <td style="padding:4px; border:1px solid #999;">Endurance Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Expected Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">Question remains concise; answer displays fully without truncation or layout issues.</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Actual Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 5 -->
+      <tr>
+        <td style="padding:4px; border:1px solid #999;">5</td>
+        <td style="padding:4px; border:1px solid #999;">Create &gt;1000 Users</td>
+        <td style="padding:4px; border:1px solid #999;">Measure user registration throughput</td>
+        <td style="padding:4px; border:1px solid #999;">Send 1000+ POST /users requests and monitor for errors and response times.</td>
+        <td style="padding:4px; border:1px solid #999;">–</td>
+        <td style="padding:4px; border:1px solid #999;">Endurance Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Expected Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">All 1000+ user registrations succeed without errors and avg response time &lt;300 ms.</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Actual Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">&nbsp;</td>
+      </tr>
+  
+      <!-- Test 6 -->
+      <tr>
+        <td style="padding:4px; border:1px solid #999;">6</td>
+        <td style="padding:4px; border:1px solid #999;">≥1000 Quiz Sessions</td>
+        <td style="padding:4px; border:1px solid #999;">Validate tracking of quiz history</td>
+        <td style="padding:4px; border:1px solid #999;">Simulate creation of 1000 quiz sessions and verify statistics retrieval.</td>
+        <td style="padding:4px; border:1px solid #999;">–</td>
+        <td style="padding:4px; border:1px solid #999;">Endurance Test</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Expected Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">All 1000 sessions record correctly and statistics pages load in &lt;500 ms without errors.</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999; background:#d9d2e9;">Actual Outcome</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:4px; border:1px solid #999;">&nbsp;</td>
+      </tr>
+    </tbody>
+  </table>
+  

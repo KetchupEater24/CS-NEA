@@ -2147,6 +2147,7 @@ class SettingsPage(BasePage):
             user_info = self.db.get_user(self.user_id)
             current_email = user_info.get("email", "")
             current_username = user_info.get("username", "")
+            current_password = user_info.get("password", "")
         except Exception as e:
             print(f"error fetching user info: {e}")
             current_email = ""
@@ -2168,7 +2169,7 @@ class SettingsPage(BasePage):
 
         # create a central container to center the settings container within main_area
         center_container = ctk.CTkFrame(main_area, fg_color="transparent")
-        center_container.place(relx=0.5, rely=0.5, anchor="center")
+        center_container.place(relx=0.5, rely=0.3, anchor="center")
 
         # create settings container (holds the settings form) (to change username, email, password and delete account)
         self.settings_container = ctk.CTkFrame(
@@ -2247,6 +2248,7 @@ class SettingsPage(BasePage):
             show="•"
         )
         self.password_entry.pack(pady=(0, 10))
+        self.password_entry.insert(0, current_password)
         # note: do not pre-populate the password field
 
         # add update settings button
