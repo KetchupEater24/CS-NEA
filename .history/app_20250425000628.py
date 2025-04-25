@@ -1212,7 +1212,7 @@ class QuizSession(ctk.CTkFrame):
         # makes an instruction label to tell the user how to answer a card
         self.instruction_label = ctk.CTkLabel(
             self.scrollable_frame,
-            text="After you view each question, click \"Show Answer\" and then review  difficulty and correctness (whether you got it right or wrong) of the card.",
+            text="After you view each question, click \"Show Answer\" and then rate difficulty and accuracy of your recall.",
             font=("Inter", 14),
             text_color="#1F2937",
             wraplength=800,
@@ -1343,21 +1343,12 @@ class QuizSession(ctk.CTkFrame):
         self.interval_help = ctk.CTkLabel(
             self.rating_section,
             text=(
-
                 "Choose how well you recalled the answer:\n"
-                " • Very Hard → review in 2 minutes   (you barely remembered it; need to review the card again)\n"
-                " • Hard → review in 6 minutes         (you struggled; repeat soon the card soon)\n"
-                " • Medium → review in 10 minutes      (you remembered with effort; revisit the card shortly)\n"
-                " • Easy → review tomorrow (1 day)     (you recalled it comfortably; check if you still remember the card tomorrow)\n"
-                " • Very Easy → review in 3 days       (you remembered effortlessly; check if you still remember the card after 3 days)\n"
-                "\n"
-                "Cards “available for review” are those whose scheduled review time has arrived (or have never been reviewed) and are ready for practice.\n"
-                "\n"
-                "For example, pressing “Very Hard” will make the card available to practice in just 2 minutes.\n"
-                "While the option “Very Easy“ will make the card available to practice in 3 days\n"
-                "This ensures that Easier cards are reviewed after longer periods of time, while harder ones are reviewed more frequently, thus enforcing Spaced Repitition"
-
-
+                " • Very Hard → review in 2 minutes\n"
+                " • Hard → review in 6 minutes\n"
+                " • Medium → review in 10 minutes\n"
+                " • Easy → review tomorrow (1 day)\n"
+                " • Very Easy → review in 3 days"
             ),
             font=("Inter", 12),
             text_color="#4B5563",
@@ -1398,10 +1389,7 @@ class QuizSession(ctk.CTkFrame):
         # explain correctness meaning - center aligned
         self.correct_help = ctk.CTkLabel(
             self.correct_frame,
-            text=(
-                "Judge whether or not you feel you got the card right. \"Correct\" marks it right, \"Incorrect\" marks it wrong.    "
-                "Remember to be honest with yourself—making mistakes is a natural part of learning and helps you improve!"
-            ),
+            text="Confirm if you truly recalled it. \"Correct\" marks it right, \"Incorrect\" marks it wrong.",
             font=("Inter", 12),
             text_color="#4B5563",
             wraplength=600,
@@ -1500,37 +1488,8 @@ class QuizSession(ctk.CTkFrame):
         self.current_card += 1
         self.display_card()
         
-    # shows a confirmation message after rating option selected
-    def show_temporary_confirmation(self, message, duration=1500):
-        # Create a small popup frame on top of the current content
-        popup = ctk.CTkFrame(
-            self.content, 
-            fg_color="#ECFDF5",  
-            corner_radius=8,
-            border_width=1,
-            border_color="#10B981" 
-        )
-        
-        # Position the popup at the center top of the content area
-        popup.place(relx=0.5, rely=0.3, anchor="center")
-        
-        # Add the confirmation message
-        confirm_label = ctk.CTkLabel(
-            popup,
-            text=message,
-            font=("Inter", 14, "bold"),
-            text_color="#065F46",  
-            padx=20,
-            pady=10
-        )
-        confirm_label.pack(padx=20, pady=10)
-        
-        # Schedule the popup to disappear after the specified duration
-        self.after(duration, lambda: popup.destroy())
-
-            
     def rate_card_difficulty(self, quality):
-        # update scheduling of card using spaced repitition algorithm
+        # update scheduling only
         card_time = (datetime.now() - self.card_start_time).total_seconds()
         self.db.update_spaced_rep(
             user_id=self.user_id,
@@ -1538,17 +1497,6 @@ class QuizSession(ctk.CTkFrame):
             quality=quality,
             time_taken=card_time
         )
-        
-        difficulty_messages = {
-            0: "Rating received: Very Hard - Card will be reviewed in 2 minutes",
-            1: "Rating received: Hard - Card will be reviewed in 6 minutes",
-            2: "Rating received: Medium - Card will be reviewed in 10 minutes",
-            3: "Rating received: Easy - Card will be reviewed in 1 day",
-            4: "Rating received: Very Easy - Card will be reviewed in 3 days"
-        }
-        
-        message = difficulty_messages.get(quality, "Rating received")
-        self.show_temporary_confirmation(message)
         
     def end_quiz(self):
         # calculate total quiz session time and average time per card

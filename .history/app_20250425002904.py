@@ -1539,17 +1539,6 @@ class QuizSession(ctk.CTkFrame):
             time_taken=card_time
         )
         
-        difficulty_messages = {
-            0: "Rating received: Very Hard - Card will be reviewed in 2 minutes",
-            1: "Rating received: Hard - Card will be reviewed in 6 minutes",
-            2: "Rating received: Medium - Card will be reviewed in 10 minutes",
-            3: "Rating received: Easy - Card will be reviewed in 1 day",
-            4: "Rating received: Very Easy - Card will be reviewed in 3 days"
-        }
-        
-        message = difficulty_messages.get(quality, "Rating received")
-        self.show_temporary_confirmation(message)
-        
     def end_quiz(self):
         # calculate total quiz session time and average time per card
         deck_time = (datetime.now() - self.session_start_time).total_seconds()
