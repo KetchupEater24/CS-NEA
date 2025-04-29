@@ -1,0 +1,19 @@
+{
+  "name": "survey-charts",
+  "version": "0.1.0",
+  "private": true
+
+}
+
+"dependencies": {
+  "react": "^18.0.0",
+  "react-dom": "^18.0.0",
+  "recharts": "^2.1.0"
+},
+"devDependencies": {
+  // if using Tailwind:
+  "tailwindcss": "^3.0.0",
+  "postcss": "^8.0.0",
+  "autoprefixer": "^10.0.0"
+}
+

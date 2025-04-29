@@ -1345,7 +1345,7 @@ class QuizSession(ctk.CTkFrame):
 
                 "Choose how well you recalled the answer:\n"
                 " • Very Hard → review in 2 minutes   (you barely remembered it; need to review the card again)\n"
-                " • Hard → review in 6 minutes         (you struggled; repeat the card soon)\n"
+                " • Hard → review in 6 minutes         (you struggled; repeat soon the card soon)\n"
                 " • Medium → review in 10 minutes      (you remembered with effort; revisit the card shortly)\n"
                 " • Easy → review tomorrow (1 day)     (you recalled it comfortably; check if you still remember the card tomorrow)\n"
                 " • Very Easy → review in 3 days       (you remembered effortlessly; check if you still remember the card after 3 days)\n"

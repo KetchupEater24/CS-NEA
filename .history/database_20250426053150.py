@@ -487,6 +487,20 @@ class Database:
             new_interval = int((next_day - datetime.now()).total_seconds() // 60)
             next_review_time = next_day
             repetition += 1
+        
+        # # Below is the same code as above but with adjusted intervals so cards are available for review after the appropiate interval
+        # if quality <= 2:
+        #     mapping_seconds = {0: 5, 1: 10, 2: 120}
+        #     new_interval = mapping_seconds.get(quality, 120)
+        #     repetition = 0  # reset repetition for second intervals
+        #     next_review_time = datetime.now() + timedelta(seconds=new_interval)
+        # else:
+        #     mapping_seconds = {3: 300, 4: 600}
+        #     new_interval = mapping_seconds.get(quality, 300)
+        #     repetition += 1
+        #     next_review_time = datetime.now() + timedelta(seconds=new_interval)
+
+
 
         # update the ef (easiness factor) based on quality and ensure it does not fall below 1.3
         new_ef = ef + (0.1 - (4 - quality) * (0.08 + (4 - quality) * 0.02))

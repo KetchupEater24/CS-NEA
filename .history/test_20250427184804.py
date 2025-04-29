@@ -1,10 +1,11 @@
 import random
+from datetime import datetime, timedelta
 from database import Database
 
 def make_test_data():
     db = Database()
 
-    # Create test user
+    # 1. Create or retrieve a test user.
     username = "Testuser"
     email = "Test@gmail.com"
     password = "Testpassword"
@@ -14,13 +15,13 @@ def make_test_data():
         db.cursor.execute("SELECT user_id FROM users WHERE username = ?", (username,))
         result = db.cursor.fetchone()
         user_id = result[0] if result else None
-    print(f"Test user created with id: {user_id}")
+    print("Test user created with id:", user_id)
     if user_id is None:
         print("Error: Could not create or fetch test user.")
         db.close()
         return
 
-    # Define subjects and cards
+    # 2. Define subject-specific decks and cards.
     subjects = {
         "CS": [
             ("What is RAM?", "Random Access Memory, a fast volatile storage."),
@@ -59,21 +60,68 @@ def make_test_data():
         ]
     }
 
-    # Create decks and cards only
+    deck_ids = []
     for subject, cards in subjects.items():
         deck_id = db.create_deck(user_id, f"{subject} Deck")
-        print(f"Created deck '{subject} Deck' with id: {deck_id}")
+        deck_ids.append(deck_id)
+        print(f"Created deck '{subject} Deck' with id:", deck_id)
         for question, answer in cards:
             card_id = db.create_card(deck_id, question, answer)
-            print(f"   Created card {card_id} in deck {deck_id}: '{question}'")
+            print(f"   Created card {card_id} in deck {deck_id}: {question!r}")
 
-    # Commit changes and close connection
+    # 3. Insert session-level quiz results for analytics testing.
+    start_date = datetime.now() - timedelta(days=10)
+    for deck_id in deck_ids:
+        card_count = db.get_card_count(deck_id)
+        for day_offset in range(10):
+            current_date = start_date + timedelta(days=day_offset)
+            timestamp = current_date.replace(
+                hour=random.randint(0, 23),
+                minute=random.randint(0, 59)
+            )
+            ts_str = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            correct_count = random.randint(0, card_count)
+            avg_time = random.uniform(3, 15)
+            deck_time = random.uniform(card_count * 3, card_count * 15)
+            db.cursor.execute("""
+                INSERT INTO quiz (
+                    user_id, deck_id, total_cards, correct_count, avg_time, deck_time, timestamp
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (user_id, deck_id, card_count, correct_count, avg_time, deck_time, ts_str))
+            print(f"Inserted quiz session for deck {deck_id} on {ts_str}")
+
+    # 4. Seed spaced repetition data.
+    for deck_id in deck_ids:
+        cards = db.get_cards(deck_id)
+        for card in cards:
+            card_id = card[0]
+            db.cursor.execute(
+                "SELECT sr_id FROM spaced_rep WHERE user_id = ? AND card_id = ?",
+                (user_id, card_id)
+            )
+            if not db.cursor.fetchone():
+                r = random.random()
+                if r < 0.3:
+                    ef = random.uniform(1.3, 1.9)
+                elif r < 0.7:
+                    ef = random.uniform(2.0, 2.4)
+                else:
+                    ef = random.uniform(2.5, 3.0)
+                now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                time_taken = random.uniform(3, 15)
+                is_correct = random.choice([True, False])
+                db.cursor.execute("""
+                    INSERT INTO spaced_rep (
+                        user_id, card_id, ef, next_review_date, time_taken, is_correct
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                """, (user_id, card_id, ef, now_str, time_taken, is_correct))
+                print(f"   Inserted spaced repetition for card {card_id} with ef {ef:.2f}")
+
     db.conn.commit()
     db.close()
-    print("Test questions and answers seeded successfully!")
-
-if __name__ == "__main__":
-    make_test_data()
+    print("Test data seeded successfully!")
+    
+    
 
 
 # def make_endurance_test_data():

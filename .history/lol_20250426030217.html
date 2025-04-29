@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Survey Data - User Complaints</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 80%;
+      margin: 20px auto;
+      font-family: Arial, sans-serif;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .color-indicator {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      margin-right: 8px;
+      border-radius: 50%;
+    }
+    .blue { background-color: #4285F4; }
+    .red { background-color: #EA4335; }
+    .yellow { background-color: #FBBC05; }
+    .green { background-color: #34A853; }
+    h2 {
+      text-align: center;
+      color: #666;
+      font-family: Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <h2>Responses</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Complaint</th>
+        <th>Percentage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="color-indicator blue"></span>Outdated/confusing UI</td>
+        <td>40.0%</td>
+      </tr>
+      <tr>
+        <td><span class="color-indicator red"></span>Too many ads/paywalls</td>
+        <td>25.0%</td>
+      </tr>
+      <tr>
+        <td><span class="color-indicator yellow"></span>Limited analytics</td>
+        <td>20.0%</td>
+      </tr>
+      <tr>
+        <td><span class="color-indicator green"></span>Inability to use offline</td>
+        <td>15.0%</td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>
